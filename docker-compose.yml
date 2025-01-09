@@ -1,0 +1,10 @@
+version: '4'
+
+services:
+  postgres:
+    image: postgres:17.0-bookworm
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - 5433:5433
