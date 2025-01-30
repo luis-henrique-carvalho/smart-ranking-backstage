@@ -15,6 +15,7 @@ backend.add(import('@backstage/plugin-proxy-backend'));
 backend.add(import('@backstage/plugin-scaffolder-backend'));
 backend.add(import('@backstage/plugin-scaffolder-backend-module-github'));
 backend.add(import('@backstage/plugin-techdocs-backend'));
+backend.add(import('@backstage/plugin-events-backend'));
 
 // auth plugin
 backend.add(import('@backstage/plugin-auth-backend'));
@@ -52,5 +53,54 @@ backend.add(import('@backstage/plugin-search-backend-module-techdocs'));
 
 // kubernetes
 backend.add(import('@backstage/plugin-kubernetes-backend'));
+
+import { CATALOG_ERRORS_TOPIC } from '@backstage/plugin-catalog-backend';
+import {
+  coreServices,
+  createBackendModule,
+} from '@backstage/backend-plugin-api';
+import { eventsServiceRef, EventParams } from '@backstage/plugin-events-node';
+
+interface EventsPayload {
+  entity: string;
+  location?: string;
+  errors: Error[];
+}
+
+interface EventsParamsWithPayload extends EventParams {
+  eventPayload: EventsPayload;
+}
+
+const eventsModuleCatalogErrors = createBackendModule({
+  pluginId: 'events',
+  moduleId: 'catalog-errors',
+  register(env) {
+    env.registerInit({
+      deps: {
+        events: eventsServiceRef,
+        logger: coreServices.logger,
+      },
+      async init({ events, logger }) {
+        events.subscribe({
+          id: 'catalog',
+          topics: [CATALOG_ERRORS_TOPIC],
+          async onEvent(params: EventParams): Promise<void> {
+            const event = params as EventsParamsWithPayload;
+            const { entity, location, errors } = event.eventPayload;
+            // Add custom logic here for responding to errors
+            for (const error of errors) {
+              logger.warn(error.message, {
+                entity,
+                location,
+              });
+            }
+          },
+        });
+      },
+    });
+  },
+});
+
+backend.add(eventsModuleCatalogErrors);
 
 backend.start();
