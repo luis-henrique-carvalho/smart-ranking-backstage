@@ -46,6 +46,9 @@ integrations:
     # - host: ghe.example.net
     #   apiBaseUrl: https://ghe.example.net/api/v3
     #   token: ${GHE_TOKEN}
+  azure:
+    - host: dev.azure.com
+      token: ${AZURE_TOKEN}
 
 proxy:
   ### Example for how to add a proxy endpoint for the frontend.
@@ -81,6 +84,9 @@ auth:
             # Matches the GitHub username with the Backstage user entity name.
             # See https://backstage.io/docs/auth/github/provider#resolvers for more resolvers.
             - resolver: usernameMatchingUserEntityName
+    azureDevOps:
+      yourProviderId:
+        organization: luishenrique92250483
 
 scaffolder:
   # see https://backstage.io/docs/features/software-templates/configuration for software template options

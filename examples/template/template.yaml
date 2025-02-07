@@ -186,6 +186,7 @@ spec:
           ui:options:
             allowedHosts:
               - github.com
+              - dev.azure.com
   steps:
     - id: fetch-base
       name: Fetch Base
@@ -202,17 +203,51 @@ spec:
         targetPath: ./community
         url: https://github.com/backstage/community/tree/main/backstage-community-sessions
 
-    - id: publish
-      name: Publish
+    - id: log-repo-url
+      name: Log repo URL
+      action: debug:log
+      input:
+        message: 'Repo URL: ${{ parameters.repoUrl }}'
+
+    - id: publish-github
+      name: Publish to GitHub
+      if: ${{ 'github.com' in parameters.repoUrl }}
       action: publish:github
       input:
         allowedHosts: ['github.com']
         description: This is ${{ parameters.projectName }}
         repoUrl: ${{ parameters.repoUrl }}
+        owner: ${{ parameters.owner }}
 
-    - id: register
-      name: Register
+    - id: publish-azure
+      name: Publish to Azure DevOps
+      if: ${{ 'dev.azure.com' in parameters.repoUrl }}
+      action: publish:azure
+      input:
+        allowedHosts: ['dev.azure.com']
+        description: This is ${{ parameters.projectName }}
+        repoUrl: ${{ parameters.repoUrl }}
+        project: ${{ parameters.project }}
+        organization: ${{ parameters.organization }}
+
+    - id: log-repo-url-output
+      name: Log repo URL output
+      action: debug:log
+      input:
+        message: "Repo URL: ${{ steps['publish-azure'].output.repoContentsUrl }}"
+
+    - id: register-github
+      name: Register in GitHub
+      if: ${{ 'github.com' in parameters.repoUrl }}
       action: catalog:register
       input:
-        repoContentsUrl: ${{ steps['publish'].output.repoContentsUrl }}
+        repoContentsUrl: ${{ steps['publish-github'].output.repoContentsUrl }}
+        catalogInfoPath: '/catalog-info.yaml'
+
+    - id: register-azure
+      name: Register in Azure DevOps
+      if: ${{ 'dev.azure.com' in parameters.repoUrl }}
+      action: catalog:register
+      input:
+        repoContentsUrl: ${{ steps['publish-azure'].output.repoContentsUrl }}
         catalogInfoPath: '/catalog-info.yaml'
