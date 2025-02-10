@@ -90,7 +90,6 @@ auth:
         organization: luishenrique92250483
 
 scaffolder:
-  {}
   # see https://backstage.io/docs/features/software-templates/configuration for software template options
 
 catalog:
@@ -146,7 +145,6 @@ catalog:
     #     - allow: [User, Group]
 
 kubernetes:
-  {}
   # see https://backstage.io/docs/features/kubernetes/configuration for kubernetes configuration options
 
 # see https://backstage.io/docs/permissions/getting-started for more on the permission framework
