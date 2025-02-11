@@ -32,7 +32,7 @@ export async function createRouter({
     res.status(201).json(result);
   });
 
-  router.get('/todos', async (_req, res) => {
+  router.get('/aplications', async (_req, res) => {
     res.json(await aplicationService.listAplications());
   });
 

@@ -1,7 +1,4 @@
-import {
-  mockCredentials,
-  startTestBackend,
-} from '@backstage/backend-test-utils';
+import { startTestBackend } from '@backstage/backend-test-utils';
 import { simpleApiPlugin } from './plugin';
 import request from 'supertest';
 import { catalogServiceMock } from '@backstage/plugin-catalog-node/testUtils';
@@ -17,33 +14,26 @@ describe('plugin', () => {
       features: [simpleApiPlugin],
     });
 
-    await request(server).get('/api/simple-api/todos').expect(200, {
-      items: [],
-    });
+    await request(server).get('/api/simple-api/aplications').expect(200, []);
 
     const createRes = await request(server)
-      .post('/api/simple-api/todos')
-      .send({ title: 'My Todo' });
+      .post('/api/simple-api/aplications')
+      .send({ name: 'My Todo', tecnology: 'Node.js' });
 
     expect(createRes.status).toBe(201);
     expect(createRes.body).toEqual({
-      id: expect.any(String),
-      title: 'My Todo',
-      createdBy: mockCredentials.user().principal.userEntityRef,
-      createdAt: expect.any(String),
+      status: 'created',
+      data: {
+        name: 'My Todo',
+        tecnology: 'Node.js',
+      },
     });
 
-    const createdTodoItem = createRes.body;
+    const createdTodoItem = createRes.body.data;
 
     await request(server)
-      .get('/api/simple-api/todos')
-      .expect(200, {
-        items: [createdTodoItem],
-      });
-
-    await request(server)
-      .get(`/api/simple-api/todos/${createdTodoItem.id}`)
-      .expect(200, createdTodoItem);
+      .get('/api/simple-api/aplications')
+      .expect(200, [createdTodoItem]);
   });
 
   it('should create TODO item with catalog information', async () => {
@@ -71,15 +61,16 @@ describe('plugin', () => {
     });
 
     const createRes = await request(server)
-      .post('/api/simple-api/todos')
-      .send({ title: 'My Todo', entityRef: 'component:default/my-component' });
+      .post('/api/simple-api/aplications')
+      .send({ name: 'My Todo', tecnology: 'Node.js' });
 
     expect(createRes.status).toBe(201);
     expect(createRes.body).toEqual({
-      id: expect.any(String),
-      title: '[My Component] My Todo',
-      createdBy: mockCredentials.user().principal.userEntityRef,
-      createdAt: expect.any(String),
+      status: 'created',
+      data: {
+        name: 'My Todo',
+        tecnology: 'Node.js',
+      },
     });
   });
 });

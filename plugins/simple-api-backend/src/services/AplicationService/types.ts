@@ -4,7 +4,7 @@ export interface AplicationItem {
 }
 
 export interface AplicationService {
-  listAplications(): Promise<{ items: AplicationItem[] }>;
+  listAplications(): Promise<AplicationItem[]>;
   createAplications(
     application: AplicationItem,
   ): Promise<{ status: string; data: AplicationItem }>;

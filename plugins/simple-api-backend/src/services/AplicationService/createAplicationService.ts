@@ -25,7 +25,7 @@ export async function createAplicationService({
     },
 
     async listAplications() {
-      return { items: Array.from(storedAplications) };
+      return Array.from(storedAplications);
     },
   };
 }
