@@ -1,6 +1,6 @@
 export interface AplicationItem {
   name: string;
-  tecnology: string;
+  technology: string;
 }
 
 export interface AplicationService {

@@ -3,6 +3,9 @@ import { z } from 'zod';
 import express from 'express';
 import Router from 'express-promise-router';
 import { AplicationService } from './services/AplicationService/types';
+import swaggerUi from 'swagger-ui-express';
+import path from 'path';
+import fs from 'fs';
 
 export async function createRouter({
   aplicationService,
@@ -16,9 +19,16 @@ export async function createRouter({
     response.json({ status: 'ok' });
   });
 
+  router.use('/docs', swaggerUi.serve, (req, res) => {
+    const swaggerDocument = JSON.parse(
+      fs.readFileSync(path.join(__dirname, 'swagger.json'), 'utf8'),
+    );
+    res.send(swaggerUi.generateHTML(swaggerDocument));
+  });
+
   const aplicationSchema = z.object({
     name: z.string(),
-    tecnology: z.string(),
+    technology: z.string(),
   });
 
   router.post('/aplications', async (req, res) => {

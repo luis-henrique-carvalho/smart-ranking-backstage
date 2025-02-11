@@ -18,14 +18,14 @@ describe('plugin', () => {
 
     const createRes = await request(server)
       .post('/api/simple-api/aplications')
-      .send({ name: 'My Todo', tecnology: 'Node.js' });
+      .send({ name: 'My Todo', technology: 'Node.js' });
 
     expect(createRes.status).toBe(201);
     expect(createRes.body).toEqual({
       status: 'created',
       data: {
         name: 'My Todo',
-        tecnology: 'Node.js',
+        technology: 'Node.js',
       },
     });
 
@@ -62,14 +62,14 @@ describe('plugin', () => {
 
     const createRes = await request(server)
       .post('/api/simple-api/aplications')
-      .send({ name: 'My Todo', tecnology: 'Node.js' });
+      .send({ name: 'My Todo', technology: 'Node.js' });
 
     expect(createRes.status).toBe(201);
     expect(createRes.body).toEqual({
       status: 'created',
       data: {
         name: 'My Todo',
-        tecnology: 'Node.js',
+        technology: 'Node.js',
       },
     });
   });

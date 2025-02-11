@@ -14,7 +14,7 @@ export async function createAplicationService({
     async createAplications(application: AplicationItem) {
       const newAplication = {
         name: application.name,
-        tecnology: application.tecnology,
+        technology: application.technology,
       };
 
       storedAplications.push(newAplication);
