@@ -105,4 +105,5 @@ const eventsModuleCatalogErrors = createBackendModule({
 
 backend.add(eventsModuleCatalogErrors);
 
+backend.add(import('@internal/backstage-plugin-simple-api-backend'));
 backend.start();
