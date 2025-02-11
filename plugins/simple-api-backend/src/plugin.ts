@@ -3,8 +3,7 @@ import {
   createBackendPlugin,
 } from '@backstage/backend-plugin-api';
 import { createRouter } from './router';
-import { catalogServiceRef } from '@backstage/plugin-catalog-node/alpha';
-import { createTodoListService } from './services/TodoListService';
+import { createAplicationService } from './services/AplicationService';
 
 /**
  * simpleApiPlugin backend plugin
@@ -17,22 +16,16 @@ export const simpleApiPlugin = createBackendPlugin({
     env.registerInit({
       deps: {
         logger: coreServices.logger,
-        auth: coreServices.auth,
-        httpAuth: coreServices.httpAuth,
         httpRouter: coreServices.httpRouter,
-        catalog: catalogServiceRef,
       },
-      async init({ logger, auth, httpAuth, httpRouter, catalog }) {
-        const todoListService = await createTodoListService({
+      async init({ logger, httpRouter }) {
+        const aplicationService = await createAplicationService({
           logger,
-          auth,
-          catalog,
         });
 
         httpRouter.use(
           await createRouter({
-            httpAuth,
-            todoListService,
+            aplicationService,
           }),
         );
       },
