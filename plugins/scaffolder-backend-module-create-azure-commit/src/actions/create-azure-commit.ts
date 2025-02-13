@@ -1,18 +1,20 @@
 import { createTemplateAction } from '@backstage/plugin-scaffolder-node';
 import api from '../config/api';
-import fs from 'fs';
-import path from 'path';
 
 export function createExampleAction() {
   return createTemplateAction<{
     organization: string;
     project: string;
     repository: string;
-    filePath: string;
+    fileList: Array<{
+      filePath: string;
+      fileType: string;
+      content: string;
+    }>;
     branch: string;
   }>({
     id: 'azure:commit-changes',
-    description: 'Commits the file to Azure DevOps.',
+    description: 'Commits multiple files to Azure DevOps.',
     schema: {
       input: {
         type: 'object',
@@ -20,7 +22,7 @@ export function createExampleAction() {
           'organization',
           'project',
           'repository',
-          'filePath',
+          'fileList',
           'branch',
         ],
         properties: {
@@ -36,9 +38,26 @@ export function createExampleAction() {
             type: 'string',
             description: 'Name of the repository in Azure DevOps',
           },
-          filePath: {
-            type: 'string',
-            description: 'Path of the file in the repository',
+          fileList: {
+            type: 'array',
+            description: 'List of files to commit',
+            items: {
+              type: 'object',
+              properties: {
+                filePath: {
+                  type: 'string',
+                  description: 'File path in the repository',
+                },
+                fileType: {
+                  type: 'string',
+                  description: 'File type/extension (e.g., "txt", "json")',
+                },
+                content: {
+                  type: 'string',
+                  description: 'Content of the file',
+                },
+              },
+            },
           },
           branch: {
             type: 'string',
@@ -48,11 +67,9 @@ export function createExampleAction() {
       },
     },
     async handler(ctx) {
-      const { organization, project, repository, filePath, branch } = ctx.input;
+      const { organization, project, repository, fileList, branch } = ctx.input;
 
       try {
-        const correctedFilePath = filePath.replace(/^\.\//, '');
-
         const azureRepositoryUrl = `/${organization}/${project}/_apis/git/repositories/${repository}/refs?api-version=7.1-preview.1`;
         ctx.logger.info(
           `Fetching repository reference from: ${azureRepositoryUrl}`,
@@ -70,15 +87,14 @@ export function createExampleAction() {
           `Latest reference for branch ${branch}: ${oldObjectId}`,
         );
 
-        const azureCommitUrl = `/${organization}/${project}/_apis/git/repositories/${repository}/pushes?api-version=6.0`;
-        const tempFilePath = path.join('temp', correctedFilePath);
-
-        if (!fs.existsSync(tempFilePath)) {
-          throw new Error(`File not found: ${tempFilePath}`);
-        }
-
-        const fileContent = fs.readFileSync(tempFilePath, 'utf8');
-        const base64Content = Buffer.from(fileContent).toString('base64');
+        const changes = fileList.map(file => ({
+          changeType: 'add',
+          item: { path: `${file.filePath}.${file.fileType}` },
+          newContent: {
+            content: file.content,
+            contentType: 'rawtext',
+          },
+        }));
 
         const commitPayload = {
           refUpdates: [
@@ -89,22 +105,15 @@ export function createExampleAction() {
           ],
           commits: [
             {
-              comment: 'Adding file via Backstage.io',
-              changes: [
-                {
-                  changeType: 'add',
-                  item: { path: correctedFilePath },
-                  newContent: {
-                    content: base64Content,
-                    contentType: 'base64encoded',
-                  },
-                },
-              ],
+              comment: 'Adding multiple files via Backstage.io',
+              changes: changes,
             },
           ],
         };
 
+        const azureCommitUrl = `/${organization}/${project}/_apis/git/repositories/${repository}/pushes?api-version=6.0`;
         ctx.logger.info(`Sending commit to: ${azureCommitUrl}`);
+
         const commitResponse = await api.post(
           azureCommitUrl,
           JSON.stringify(commitPayload),
@@ -117,18 +126,11 @@ export function createExampleAction() {
         }
 
         ctx.logger.info(
-          `File ${correctedFilePath} successfully committed to Azure DevOps!`,
+          `Successfully committed ${fileList.length} files to Azure DevOps!`,
         );
       } catch (error) {
-        if (error instanceof Error) {
-          ctx.logger.error(
-            `Error during Azure DevOps commit: ${error.message}`,
-          );
-          throw new Error(`Failed to commit changes: ${error.message}`);
-        } else {
-          ctx.logger.error('Unknown error during Azure DevOps commit');
-          throw new Error('Failed to commit changes due to unknown error');
-        }
+        ctx.logger.error(`Error during Azure DevOps commit: ${error}`);
+        throw new Error(`Failed to commit changes: ${error}`);
       }
     },
   });
