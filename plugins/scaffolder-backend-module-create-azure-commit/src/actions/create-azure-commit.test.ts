@@ -9,7 +9,11 @@ describe('createExampleAction', () => {
       action.handler(
         createMockActionContext({
           input: {
-            myParameter: 'test',
+            organization: 'test',
+            project: 'test',
+            repository: 'test',
+            branch: 'test',
+            filePath: 'test',
           },
         }),
       ),
@@ -23,7 +27,11 @@ describe('createExampleAction', () => {
       action.handler(
         createMockActionContext({
           input: {
-            myParameter: 'foo',
+            organization: 'test',
+            project: 'test',
+            repository: 'test',
+            branch: 'test',
+            filePath: 'test',
           },
         }),
       ),

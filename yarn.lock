@@ -14996,6 +14996,7 @@ __metadata:
     "@backstage/cli": "npm:^0.29.4"
     "@backstage/plugin-scaffolder-node": "npm:^0.6.2"
     "@backstage/plugin-scaffolder-node-test-utils": "npm:^0.1.17"
+    axios: "npm:^1.7.9"
   languageName: unknown
   linkType: soft
 
@@ -15007,7 +15008,6 @@ __metadata:
     "@backstage/cli": "npm:^0.29.4"
     "@backstage/plugin-scaffolder-node": "npm:^0.6.2"
     "@backstage/plugin-scaffolder-node-test-utils": "npm:^0.1.17"
-    axios: "npm:^1.7.9"
   languageName: unknown
   linkType: soft
 
