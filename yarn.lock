@@ -14961,6 +14961,7 @@ __metadata:
     "@backstage/plugin-techdocs-backend": "npm:^1.11.4"
     app: "link:../app"
     backstage-plugin-scaffolder-backend-module-create-azure-branch: "npm:^0.1.0"
+    backstage-plugin-scaffolder-backend-module-create-file: "npm:^0.1.0"
     better-sqlite3: "npm:^9.0.0"
     node-gyp: "npm:^10.0.0"
     pg: "npm:^8.11.3"
@@ -14983,6 +14984,17 @@ __metadata:
     "@backstage/plugin-scaffolder-node": "npm:^0.6.2"
     "@backstage/plugin-scaffolder-node-test-utils": "npm:^0.1.17"
     axios: "npm:^1.7.9"
+  languageName: unknown
+  linkType: soft
+
+"backstage-plugin-scaffolder-backend-module-create-file@npm:^0.1.0, backstage-plugin-scaffolder-backend-module-create-file@workspace:plugins/scaffolder-backend-module-create-file":
+  version: 0.0.0-use.local
+  resolution: "backstage-plugin-scaffolder-backend-module-create-file@workspace:plugins/scaffolder-backend-module-create-file"
+  dependencies:
+    "@backstage/backend-plugin-api": "npm:^1.1.0"
+    "@backstage/cli": "npm:^0.29.4"
+    "@backstage/plugin-scaffolder-node": "npm:^0.6.2"
+    "@backstage/plugin-scaffolder-node-test-utils": "npm:^0.1.17"
   languageName: unknown
   linkType: soft
 
