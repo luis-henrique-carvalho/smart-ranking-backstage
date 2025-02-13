@@ -48,7 +48,6 @@
     "app": "link:../app",
     "backstage-plugin-scaffolder-backend-module-create-azure-branch": "^0.1.0",
     "backstage-plugin-scaffolder-backend-module-create-azure-commit": "^0.1.0",
-    "backstage-plugin-scaffolder-backend-module-create-file": "^0.1.0",
     "better-sqlite3": "^9.0.0",
     "node-gyp": "^10.0.0",
     "pg": "^8.11.3"
