@@ -11,8 +11,6 @@ import path from 'path';
  * @public
  */
 export function createExampleAction() {
-  // For more information on how to define custom actions, see
-  //   https://backstage.io/docs/features/software-templates/writing-custom-actions
   return createTemplateAction<{
     filePath: string;
     content: string;
@@ -34,13 +32,13 @@ export function createExampleAction() {
     },
     async handler(ctx) {
       const { filePath, content } = ctx.input;
-      const dirPath = path.dirname(filePath);
+      const tempFilePath = path.join('temp', filePath);
+      const dirPath = path.dirname(tempFilePath);
 
       fs.mkdirSync(dirPath, { recursive: true });
 
-      fs.writeFileSync(path.resolve(filePath), content, 'utf8');
-      ctx.logger.info(`Arquivo criado: ${filePath}`);
-      ctx.logger.info(`Conteúdo: ${content}`);
+      fs.writeFileSync(path.resolve(tempFilePath), content, 'utf8');
+      ctx.logger.info(`Arquivo criado: ${tempFilePath}`);
     },
   });
 }
