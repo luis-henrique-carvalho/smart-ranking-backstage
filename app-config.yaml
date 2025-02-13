@@ -130,10 +130,9 @@ catalog:
       target: https://github.com/backstage/backstage/blob/master/packages/catalog-model/examples/components/artist-lookup-component.yaml
 
     - type: url
-      target: https://github.com/luis-henrique-carvalho/backstage_catalog/blob/master/all.yaml
+      target: https://github.com/luis-henrique-carvalho/backstage-templates/tree/main
       rules:
-        - allow:
-            [Template, Component, System, API, Resource, Location, Group, User]
+        - allow: [Template, Location]
     ## Uncomment these lines to add more example data
     # - type: url
     #   target: https://github.com/backstage/backstage/blob/master/packages/catalog-model/examples/all.yaml
