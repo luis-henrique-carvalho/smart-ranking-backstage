@@ -13,7 +13,7 @@ export function createExampleAction() {
     }>;
     branch: string;
   }>({
-    id: 'azure:commit-changes',
+    id: 'azure:create-commit',
     description: 'Commits multiple files to Azure DevOps.',
     schema: {
       input: {
