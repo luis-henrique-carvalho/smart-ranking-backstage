@@ -97,18 +97,7 @@ catalog:
     entityFilename: catalog-info.yaml
     pullRequestBranchName: backstage-integration
   rules:
-    - allow:
-        [
-          Component,
-          System,
-          API,
-          Resource,
-          Location,
-          Group,
-          User,
-          Template,
-          Location,
-        ]
+    - allow: [Component, System, API, Resource, Location, Group, User, Template]
   locations:
     # Local example data, file locations are relative to the backend process, typically `packages/backend`
     - type: file
@@ -130,9 +119,9 @@ catalog:
       target: https://github.com/backstage/backstage/blob/master/packages/catalog-model/examples/components/artist-lookup-component.yaml
 
     - type: url
-      target: https://github.com/luis-henrique-carvalho/backstage-templates/tree/main
+      target: https://github.com/luis-henrique-carvalho/backstage-templates/blob/main/all-templates.yaml
       rules:
-        - allow: [Template, Location]
+        - allow: [Template, Location, Resource]
     ## Uncomment these lines to add more example data
     # - type: url
     #   target: https://github.com/backstage/backstage/blob/master/packages/catalog-model/examples/all.yaml
