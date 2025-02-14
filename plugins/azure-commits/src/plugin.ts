@@ -16,7 +16,9 @@ export const AzureCommitsPage = azureCommitsPlugin.provide(
   createRoutableExtension({
     name: 'AzureCommitsPage',
     component: () =>
-      import('./components/ExampleComponent').then(m => m.ExampleComponent),
+      import('./components/AzureCommitsContent').then(
+        m => m.AzureCommitsContent,
+      ),
     mountPoint: rootRouteRef,
   }),
 );
