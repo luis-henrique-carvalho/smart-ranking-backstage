@@ -49,7 +49,7 @@ export function createAzureBranchAction() {
 
         if (repositoryResponse.status !== 200) {
           throw new Error(
-            `Failed to fetch repository reference: ${repositoryResponse.status} - ${repositoryResponse.statusText}`,
+            `Failed to fetch repository reference: ${repositoryResponse}`,
           );
         }
 
