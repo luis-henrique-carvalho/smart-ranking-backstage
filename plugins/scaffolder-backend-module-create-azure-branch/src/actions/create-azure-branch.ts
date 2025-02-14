@@ -47,8 +47,10 @@ export function createAzureBranchAction() {
         const repositoryResponse = await api.get(azureUrl);
         const repositoryId = repositoryResponse.data.value[0].objectId;
 
-        if (!repositoryId) {
-          throw new Error('Repository not found');
+        if (repositoryResponse.status !== 200) {
+          throw new Error(
+            `Failed to fetch repository reference: ${repositoryResponse.status} - ${repositoryResponse.statusText}`,
+          );
         }
 
         const createBranchsBody = branchNames.map(branchName => {

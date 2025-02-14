@@ -18,6 +18,7 @@ describe('createAzureBranchAction', () => {
     const action = createAzureBranchAction();
 
     mockGet.mockResolvedValue({
+      status: 200,
       data: {
         value: [{ objectId: '123' }],
       },
