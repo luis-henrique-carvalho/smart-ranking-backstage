@@ -1,30 +1,26 @@
 import { useApi } from '@backstage/core-plugin-api';
-import { fetchApiRef } from '@backstage/core-plugin-api';
+import { AzureCommitsApiRef } from '../api';
 import { useEffect, useState } from 'react';
+import { Commit } from '../types';
 
-export const useAzureCommitsApi = (repositoryUrl: string) => {
-  const fetchApi = useApi(fetchApiRef);
-  const [commits, setCommits] = useState<any[]>([]);
+export const useAzureCommitsApi = (
+  repositoryId: string,
+  organization: string,
+  project: string,
+) => {
+  const fetchApi = useApi(AzureCommitsApiRef);
+  const [commits, setCommits] = useState<Commit[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
+
+  const repositoryUrl = `https://dev.azure.com/${organization}/${project}/_apis/git/repositories/${repositoryId}/commits?api-version=7.1-preview.1`;
 
   useEffect(() => {
     const fetchCommits = async () => {
       try {
-        const response = await fetchApi.fetch(repositoryUrl, {
-          method: 'GET',
-          headers: {
-            Authorization: `Basic ${Buffer.from(
-              `:${process.env.AZURE_TOKEN}`,
-            ).toString('base64')}`,
-            'Content-Type': 'application/json',
-          },
-        });
-        if (!response.ok) {
-          throw new Error('Failed to fetch commits');
-        }
-        const data = await response.json();
-        setCommits(data.value);
+        const response = await fetchApi.getCommits(repositoryUrl);
+
+        setCommits(response.value);
       } catch (err) {
         setError(err as Error);
       } finally {

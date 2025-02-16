@@ -20,8 +20,7 @@ export const AzureCommitsContent = () => {
     const organization = entity.metadata.annotations?.['azure.com/organization'];
     const project = entity.metadata.annotations?.['azure.com/project'];
 
-    const repositoryUrl = `https://dev.azure.com/${organization}/${project}/_apis/git/repositories/${repositoryId}/commits?api-version=7.1-preview.1`
-    const { commits, loading, error } = useAzureCommitsApi(repositoryUrl);
+    const { commits, loading, error } = useAzureCommitsApi(repositoryId!, organization!, project!);
 
     if (!isAzureRepositoryAvailable(entity)) {
         return <MissingAnnotationEmptyState annotation={['azure.com/repository-id', 'azure.com/organization', 'azure.com/project']} />;
@@ -32,7 +31,7 @@ export const AzureCommitsContent = () => {
     }
 
     if (error) {
-        return <Typography color="error">Erro ao carregar commits: {error.message}</Typography>;
+        return <Typography color="error">{error.message}</Typography>;
     }
 
     return (

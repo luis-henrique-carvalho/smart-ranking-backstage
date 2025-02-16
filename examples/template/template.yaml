@@ -136,6 +136,12 @@ spec:
         description: This is ${{ parameters.name }}
         repoUrl: ${{ parameters.repoUrl }}
 
+    - id: log-repo-url
+      name: Log repo URL
+      action: debug:log
+      input:
+        message: 'Repo URL: ${{ parameters.repoUrl }}'
+
     - id: register
       name: Register
       action: catalog:register
