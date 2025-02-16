@@ -1,11 +1,12 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Grid, Paper, CircularProgress, Typography, TableContainer, Box } from '@material-ui/core';
 import { InfoCard } from '@backstage/core-components';
 import { useEntity, MissingAnnotationEmptyState } from '@backstage/plugin-catalog-react';
-import { useAzureCommitsApi } from '../../hooks/useAzureCommitsApi';
+import { useCommitsApi } from '../../hooks/useCommitsApi';
 import { BranchSelect } from './components/BranchSelect';
 import { CommitsTable } from './components/CommitsTable';
 import { useStyles } from './style';
+import { useBranchesApi } from '../../hooks/useBranchesApi';
 
 export const AzureCommitsContent = () => {
     const { entity } = useEntity();
@@ -15,10 +16,19 @@ export const AzureCommitsContent = () => {
     const organization = entity.metadata.annotations?.['azure.com/organization'];
     const project = entity.metadata.annotations?.['azure.com/project'];
 
-    const { commits, branches, selectedBranch, setSelectedBranch, loading, error } = useAzureCommitsApi(
+    const [selectedBranch, setSelectedBranch] = useState<string>('master');
+
+    const { branches, loading: branchesLoading, error: branchesError } = useBranchesApi(
         repositoryId!,
         organization!,
         project!,
+    );
+
+    const { commits, loading: commitsLoading, error: commitsError } = useCommitsApi(
+        repositoryId!,
+        organization!,
+        project!,
+        selectedBranch,
     );
 
 
@@ -26,23 +36,26 @@ export const AzureCommitsContent = () => {
         return <MissingAnnotationEmptyState annotation={['azure.com/repository-id', 'azure.com/organization', 'azure.com/project']} />;
     }
 
-    if (loading) {
+    if (branchesLoading || commitsLoading) {
         return (
             <Box display="flex" justifyContent="center" alignItems="center" minHeight="200px">
                 <CircularProgress />
-                <Typography variant="body1" style={{ marginLeft: '16px' }}>Carregando commits...</Typography>
+                <Typography variant="body1" style={{ marginLeft: '16px' }}>Carregando...</Typography>
             </Box>
         );
     }
 
-    if (error) {
+    if (branchesError || commitsError) {
         return (
             <Paper className={classes.root}>
-                <Typography variant="h6" color="error">Ocorreu um erro ao carregar os commits:</Typography>
-                <Typography variant="body1" color="error">{error.message}</Typography>
+                <Typography variant="h6" color="error">Ocorreu um erro:</Typography>
+                <Typography variant="body1" color="error">
+                    {branchesError?.message || commitsError?.message}
+                </Typography>
             </Paper>
         );
     }
+
 
     return (
         <Grid container spacing={3} direction="column" className={classes.root}>
