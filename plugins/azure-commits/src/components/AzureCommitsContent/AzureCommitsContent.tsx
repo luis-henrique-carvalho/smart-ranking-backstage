@@ -31,7 +31,6 @@ export const AzureCommitsContent = () => {
         selectedBranch,
     );
 
-
     if (!repositoryId || !organization || !project) {
         return <MissingAnnotationEmptyState annotation={['azure.com/repository-id', 'azure.com/organization', 'azure.com/project']} />;
     }
@@ -56,16 +55,26 @@ export const AzureCommitsContent = () => {
         );
     }
 
-
     return (
         <Grid container spacing={3} direction="column" className={classes.root}>
             <Grid item>
-                <BranchSelect
-                    branches={branches}
-                    selectedBranch={selectedBranch}
-                    onBranchChange={setSelectedBranch}
-                />
-                <InfoCard title={`Azure Commits - Branch: ${selectedBranch}`} noPadding>
+                <InfoCard title={
+                    <Box display="flex" alignItems="center" justifyContent="space-between">
+                        <div style={{ display: 'flex', alignItems: 'center' }}>
+                            <Typography variant="h4">
+                                Commits
+                            </Typography>
+                            <Typography variant="body1" color="textSecondary" style={{ marginLeft: '8px' }}>
+                                ({commits.length})
+                            </Typography>
+                        </div>
+                        <BranchSelect
+                            branches={branches}
+                            selectedBranch={selectedBranch}
+                            onBranchChange={setSelectedBranch}
+                        />
+                    </Box>
+                } noPadding>
                     <TableContainer component={Paper}>
                         <CommitsTable commits={commits} />
                     </TableContainer>
