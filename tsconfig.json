@@ -6,6 +6,7 @@
     "plugins/*/src",
     "plugins/*/config.d.ts",
     "plugins/*/tsx",
+    "plugins/*/ts",
     "plugins/*/dev",
     "plugins/*/migrations"
   ],

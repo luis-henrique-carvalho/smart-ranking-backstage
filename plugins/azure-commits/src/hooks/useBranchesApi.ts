@@ -21,10 +21,16 @@ export const useBranchesApi = (
         setLoading(true);
         const response = await fetchApi.getBranches(getBranchesUrl);
         setBranches(
-          response.value.map((b: any) => ({
-            ...b,
-            name: b.name.replace('refs/heads/', ''),
-          })),
+          response.value
+            .map((b: any) => ({
+              ...b,
+              name: b.name.replace('refs/heads/', ''),
+            }))
+            .sort((a, b) => {
+              if (a.name === 'master') return -1;
+              if (b.name === 'master') return 1;
+              return 0;
+            }),
         );
       } catch (err) {
         setError(err as Error);
