@@ -1,8 +1,7 @@
-// Tipos para representar os dados da API do Azure DevOps
 export interface CommitAuthor {
   name: string;
   email: string;
-  date: string; // Data no formato ISO 8601
+  date: string;
 }
 
 export interface Commit {
