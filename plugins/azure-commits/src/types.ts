@@ -18,7 +18,33 @@ export interface Commit {
   remoteUrl: string;
 }
 
+interface Creator {
+  displayName: string;
+  url: string;
+  _links: {
+    avatar: {
+      href: string;
+    };
+  };
+  id: string;
+  uniqueName: string;
+  imageUrl: string;
+  descriptor: string;
+}
+
 export interface CommitResponse {
   count: number;
   value: Commit[];
+}
+
+export interface Branch {
+  name: string;
+  objectId?: string;
+  creator?: Creator;
+  url?: string;
+}
+
+export interface BranchsResponse {
+  value: Branch[];
+  count: number;
 }
