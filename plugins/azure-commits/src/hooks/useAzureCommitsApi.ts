@@ -12,20 +12,27 @@ export const useAzureCommitsApi = (
   const [commits, setCommits] = useState<Commit[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
-  const [branchLIst, setBranchList] = useState<Branch[]>([]);
+  const [branches, setBranches] = useState<Branch[]>([]);
   const [selectedBranch, setSelectedBranch] = useState<string>('master');
 
-  const getCommitsUrl = `https://dev.azure.com/${organization}/${project}/_apis/git/repositories/${repositoryId}/commits?refs?filter=refs/heads/${selectedBranch}&api-version=7.1-preview.1`;
+  const getCommitsUrl = `https://dev.azure.com/${organization}/${project}/_apis/git/repositories/${repositoryId}/commits?searchCriteria.itemVersion.version=${selectedBranch}&api-version=7.1-preview.1`;
   const getBranchesUrl = `https://dev.azure.com/${organization}/${project}/_apis/git/repositories/${repositoryId}/refs?filter=heads&api-version=7.1-preview.1`;
 
   useEffect(() => {
-    const fetchCommits = async () => {
+    const fetchData = async () => {
       try {
-        const responseBranchs = await fetchApi.getBranches(getBranchesUrl);
-        const responseCommit = await fetchApi.getCommits(getCommitsUrl);
+        setLoading(true);
 
-        setCommits(responseCommit.value);
-        setBranchList(responseBranchs.value);
+        const branchesResponse = await fetchApi.getBranches(getBranchesUrl);
+        const commitsResponse = await fetchApi.getCommits(getCommitsUrl);
+
+        setBranches(
+          branchesResponse.value.map((b: any) => ({
+            ...b,
+            name: b.name.replace('refs/heads/', ''),
+          })),
+        );
+        setCommits(commitsResponse.value);
       } catch (err) {
         setError(err as Error);
       } finally {
@@ -33,14 +40,14 @@ export const useAzureCommitsApi = (
       }
     };
 
-    fetchCommits();
-  }, [fetchApi, getCommitsUrl, getBranchesUrl, selectedBranch]);
+    fetchData();
+  }, [fetchApi, selectedBranch, getBranchesUrl, getCommitsUrl]);
 
   return {
     commits,
     loading,
     error,
-    branchLIst,
+    branches,
     selectedBranch,
     setSelectedBranch,
   };
