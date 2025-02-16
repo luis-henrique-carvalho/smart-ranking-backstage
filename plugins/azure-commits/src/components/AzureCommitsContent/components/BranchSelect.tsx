@@ -10,7 +10,7 @@ interface BranchSelectProps {
 
 export const BranchSelect = ({ branches, selectedBranch, onBranchChange }: BranchSelectProps) => (
     <Box mb={2}>
-        <FormControl variant="outlined" size="medium" style={{ width: '200px' }}>
+        <FormControl variant="outlined" size="medium" style={{ width: '250px' }}>
             <InputLabel>Selecionar Branch</InputLabel>
             <Select
                 value={selectedBranch}
