@@ -22,6 +22,7 @@ export class AzureCommitsApiClient implements AzureCommitsApi {
   constructor(options: { discoveryApi: DiscoveryApi; configApi: ConfigApi }) {
     this.discoveryApi = options.discoveryApi;
     this.configApi = options.configApi;
+    // TODO - Change this to use the config API and .env
     this.token =
       '9WgXVwevRNpsjlcvST72zdCiLKKUaVMgJ9Bk9jhmpO2hGz9YNTbvJQQJ99BBACAAAAAAAAAAAAASAZDOdXGG';
   }
