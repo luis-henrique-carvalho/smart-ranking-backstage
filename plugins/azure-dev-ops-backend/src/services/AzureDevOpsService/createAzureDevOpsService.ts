@@ -14,10 +14,7 @@ export async function createAzureDevOpsService({
   logger.info('Initializing AzureDevOpsService');
 
   return {
-    async listReleasePipelines() {
-      const projectName = 'backstage';
-      const org = 'luishenrique92250483';
-
+    async listReleasePipelines(org, projectName) {
       try {
         const response = await api.get(
           `/${org}/${projectName}/_apis/release/definitions?api-version=7.0`,

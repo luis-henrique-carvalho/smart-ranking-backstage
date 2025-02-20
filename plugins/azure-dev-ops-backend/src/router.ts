@@ -14,9 +14,12 @@ export async function createRouter({
     res.send('OK');
   });
 
-  router.get('/release-pipelines', async (req, res) => {
+  router.get('/release-pipelines/:org/:project', async (req, res) => {
     try {
-      const pipelines = await azureDevOpsService.listReleasePipelines();
+      const pipelines = await azureDevOpsService.listReleasePipelines(
+        req.params.org,
+        req.params.project,
+      );
       res.json(pipelines);
     } catch (error: any) {
       if (error.name === 'NotFoundError') {

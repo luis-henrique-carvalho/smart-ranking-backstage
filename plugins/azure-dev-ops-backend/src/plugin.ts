@@ -33,12 +33,7 @@ export const azureDevOpsPlugin = createBackendPlugin({
         );
 
         httpRouter.addAuthPolicy({
-          path: '/health',
-          allow: 'unauthenticated',
-        });
-
-        httpRouter.addAuthPolicy({
-          path: '/release-pipelines',
+          path: '*',
           allow: 'unauthenticated',
         });
       },

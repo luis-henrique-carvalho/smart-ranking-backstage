@@ -57,5 +57,8 @@ export interface AzureDevOpsReleasePipelinesResponse {
 }
 
 export interface AzureDevOpsService {
-  listReleasePipelines(): Promise<AzureDevOpsReleasePipelinesResponse>;
+  listReleasePipelines(
+    org: string,
+    project: string,
+  ): Promise<AzureDevOpsReleasePipelinesResponse>;
 }
