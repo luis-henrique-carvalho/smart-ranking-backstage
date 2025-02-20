@@ -17,21 +17,17 @@ export const azureDevOpsPlugin = createBackendPlugin({
     env.registerInit({
       deps: {
         logger: coreServices.logger,
-        auth: coreServices.auth,
-        httpAuth: coreServices.httpAuth,
         httpRouter: coreServices.httpRouter,
         catalog: catalogServiceRef,
       },
-      async init({ logger, auth, httpAuth, httpRouter, catalog }) {
+      async init({ logger, httpRouter, catalog }) {
         const azureDevOpsService = await createAzureDevOpsService({
           logger,
-          auth,
           catalog,
         });
 
         httpRouter.use(
           await createRouter({
-            httpAuth,
             azureDevOpsService,
           }),
         );
