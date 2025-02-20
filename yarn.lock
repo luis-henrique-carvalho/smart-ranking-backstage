@@ -15794,6 +15794,7 @@ __metadata:
     "@backstage/plugin-catalog-node": "npm:^1.15.0"
     "@types/express": "npm:^4.17.6"
     "@types/supertest": "npm:^2.0.12"
+    axios: "npm:^1.7.9"
     express: "npm:^4.17.1"
     express-promise-router: "npm:^4.1.0"
     supertest: "npm:^6.2.4"
