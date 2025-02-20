@@ -55,3 +55,10 @@ export interface AzureDevOpsReleasePipelinesResponse {
   count: number;
   value: AzureDevOpsReleasePipeline[];
 }
+
+export interface AzureDevOpsService {
+  listReleasePipelines(
+    organization: string,
+    project: string,
+  ): Promise<AzureDevOpsReleasePipelinesResponse>;
+}

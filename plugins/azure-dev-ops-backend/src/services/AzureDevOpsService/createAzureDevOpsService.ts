@@ -14,13 +14,11 @@ export async function createAzureDevOpsService({
   logger.info('Initializing AzureDevOpsService');
 
   return {
-    async listReleasePipelines(org, projectName) {
+    async listReleasePipelines(organization, projectName) {
       try {
         const response = await api.get(
-          `/${org}/${projectName}/_apis/release/definitions?api-version=7.0`,
+          `/${organization}/${projectName}/_apis/release/definitions?api-version=7.0`,
         );
-
-        console.log(response.data);
 
         logger.info('Listed release pipelines');
 

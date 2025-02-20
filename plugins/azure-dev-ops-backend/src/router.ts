@@ -14,10 +14,10 @@ export async function createRouter({
     res.send('OK');
   });
 
-  router.get('/release-pipelines/:org/:project', async (req, res) => {
+  router.get('/release-pipelines/:organization/:project', async (req, res) => {
     try {
       const pipelines = await azureDevOpsService.listReleasePipelines(
-        req.params.org,
+        req.params.organization,
         req.params.project,
       );
       res.json(pipelines);
