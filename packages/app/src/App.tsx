@@ -38,6 +38,8 @@ import { RequirePermission } from '@backstage/plugin-permission-react';
 import { catalogEntityCreatePermission } from '@backstage/plugin-catalog-common/alpha';
 import { githubAuthApiRef } from '@backstage/core-plugin-api';
 import { AzureCommitsPage } from '@internal/backstage-plugin-azure-commits';
+import { AzureReleasePiplineSelectorExtension } from './scaffolder/AzureReleasePiplineSelector';
+import { ScaffolderFieldExtensions } from '@backstage/plugin-scaffolder-react';
 
 const app = createApp({
   apis,
@@ -102,7 +104,11 @@ const routes = (
               entity?.metadata?.tags?.includes('recommended') ?? false,
           },
         ]}
-    />} />
+    >
+      <ScaffolderFieldExtensions>
+        <AzureReleasePiplineSelectorExtension />
+      </ScaffolderFieldExtensions>
+    </ScaffolderPage>} />
     <Route path="/api-docs" element={<ApiExplorerPage />} />
     <Route
       path="/catalog-import"

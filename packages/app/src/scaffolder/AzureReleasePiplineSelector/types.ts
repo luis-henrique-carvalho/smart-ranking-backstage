@@ -50,8 +50,3 @@ export interface AzureDevOpsReleasePipeline {
     };
   };
 }
-
-export interface AzureDevOpsReleasePipelinesResponse {
-  count: number;
-  value: AzureDevOpsReleasePipeline[];
-}

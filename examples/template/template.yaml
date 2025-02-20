@@ -23,6 +23,10 @@ spec:
           ui:autofocus: true
           ui:options:
             rows: 5
+        pipeline:
+          title: Select Release Pipeline
+          type: string
+          ui:field: AzureReleasePipelineSelector
     - title: Choose a location
       required:
         - repoUrl
@@ -38,7 +42,12 @@ spec:
   # These steps are executed in the scaffolder backend, using data that we gathered
   # via the parameters above.
   steps:
-    # Each step executes an action, in this case one templates files into the working directory.
+    - action: debug:log
+      id: write-debug-line
+      name: pipleline name
+      input:
+        message: ${{ parameters.pipeline }}
+
     - id: fetch-base
       name: Fetch Base
       action: fetch:template
