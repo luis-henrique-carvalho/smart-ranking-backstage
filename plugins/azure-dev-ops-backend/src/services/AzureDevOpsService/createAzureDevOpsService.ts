@@ -20,10 +20,12 @@ export async function createAzureDevOpsService({
 
       try {
         const response = await api.get(
-          `${org}/${projectName}/_apis/release/definitions?api-version=7.0`,
+          `/${org}/${projectName}/_apis/release/definitions?api-version=7.0`,
         );
 
         console.log(response.data);
+
+        logger.info('Listed release pipelines');
 
         return response.data;
       } catch (error) {

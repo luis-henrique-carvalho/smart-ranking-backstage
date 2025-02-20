@@ -10,9 +10,21 @@ export async function createRouter({
   const router = Router();
   router.use(express.json());
 
+  router.get('/health', async (_req, res) => {
+    res.send('OK');
+  });
+
   router.get('/release-pipelines', async (req, res) => {
-    const pipelines = await azureDevOpsService.listReleasePipelines();
-    res.json(pipelines);
+    try {
+      const pipelines = await azureDevOpsService.listReleasePipelines();
+      res.json(pipelines);
+    } catch (error: any) {
+      if (error.name === 'NotFoundError') {
+        res.status(404).json({ error: error.message });
+      } else {
+        res.status(500).json({ error: 'Internal Server Error' });
+      }
+    }
   });
 
   return router;

@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: process.env.AZURE_RELEASE_URL,
+  baseURL: 'https://vsrm.dev.azure.com',
   headers: {
     Authorization: `Basic ${Buffer.from(`:${process.env.AZURE_TOKEN}`).toString(
       'base64',
