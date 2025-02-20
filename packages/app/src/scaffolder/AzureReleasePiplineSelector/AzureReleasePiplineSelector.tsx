@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { FieldExtensionComponentProps } from '@backstage/plugin-scaffolder-react';
 import type { FieldValidation } from '@rjsf/utils';
 import FormControl from '@material-ui/core/FormControl';
@@ -7,8 +7,8 @@ import InputLabel from '@material-ui/core/InputLabel';
 import Select from '@material-ui/core/Select';
 import MenuItem from '@material-ui/core/MenuItem';
 import CircularProgress from '@material-ui/core/CircularProgress';
+import { useAzureDevOpsPipelines } from './hooks/useAzureDevOpsPipelines';
 import { AzureDevOpsReleasePipeline } from './types';
-
 
 export const AzureReleasePiplineSelector = ({
     onChange,
@@ -16,33 +16,10 @@ export const AzureReleasePiplineSelector = ({
     required,
     formData,
 }: FieldExtensionComponentProps<string>) => {
-    const [pipelines, setPipelines] = useState<AzureDevOpsReleasePipeline[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
+    const org = 'luishenrique92250483';
+    const project = 'backstage';
 
-
-    useEffect(() => {
-        const fetchPipelines = async () => {
-            try {
-                const response = await fetch(
-                    'http://localhost:7007/api/azure-dev-ops/release-pipelines/luishenrique92250483/backstage'
-                );
-
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-
-                const data = await response.json();
-                setPipelines(data.value);
-            } catch (err: any) {
-                setError(err.message || 'Failed to load pipelines');
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        fetchPipelines();
-    }, []);
+    const { pipelines, loading, error } = useAzureDevOpsPipelines(org, project);
 
     if (loading) {
         return (
@@ -75,7 +52,7 @@ export const AzureReleasePiplineSelector = ({
                 onChange={e => onChange(e.target.value as string)}
                 label="Release Pipeline"
             >
-                {pipelines.map(pipeline => (
+                {pipelines.map((pipeline: AzureDevOpsReleasePipeline) => (
                     <MenuItem key={pipeline.id} value={pipeline.id.toString()}>
                         {pipeline.name}
                     </MenuItem>
