@@ -26,7 +26,11 @@ spec:
         pipeline:
           title: Select Release Pipeline
           type: string
-          ui:field: AzureReleasePipelineSelector
+          ui:field: AzureReleasePiplineSelector
+        project:
+          title: Select Project
+          type: string
+          ui:field: AzureProjectSelector
     - title: Choose a location
       required:
         - repoUrl

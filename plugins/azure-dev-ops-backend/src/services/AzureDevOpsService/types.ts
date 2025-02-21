@@ -51,6 +51,21 @@ export interface AzureDevOpsReleasePipeline {
   };
 }
 
+export interface AzureDevOpsProjects {
+  id: string;
+  name: string;
+  url: string;
+  state: string;
+  revision: number;
+  visibility: string;
+  lastUpdateTime: string;
+}
+
+export interface AzureDevOpsProjectsdResponse {
+  count: number;
+  value: AzureDevOpsProjects[];
+}
+
 export interface AzureDevOpsReleasePipelinesResponse {
   count: number;
   value: AzureDevOpsReleasePipeline[];
@@ -61,4 +76,5 @@ export interface AzureDevOpsService {
     organization: string,
     project: string,
   ): Promise<AzureDevOpsReleasePipelinesResponse>;
+  listProjects(organization: string): Promise<string[]>;
 }

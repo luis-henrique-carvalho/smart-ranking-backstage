@@ -2,7 +2,7 @@ import { LoggerService } from '@backstage/backend-plugin-api';
 import { NotFoundError } from '@backstage/errors';
 import { catalogServiceRef } from '@backstage/plugin-catalog-node/alpha';
 import { AzureDevOpsService } from './types';
-import api from '../../config/api';
+import ApiClient from '../../config/api';
 
 export async function createAzureDevOpsService({
   logger,
@@ -13,10 +13,16 @@ export async function createAzureDevOpsService({
 }): Promise<AzureDevOpsService> {
   logger.info('Initializing AzureDevOpsService');
 
+  const releaseApiClient = new ApiClient('https://vsrm.dev.azure.com');
+  const azureApiClient = new ApiClient('https://dev.azure.com');
+
+  const releaseApi = releaseApiClient.getClient();
+  const azureApi = azureApiClient.getClient();
+
   return {
     async listReleasePipelines(organization, projectName) {
       try {
-        const response = await api.get(
+        const response = await releaseApi.get(
           `/${organization}/${projectName}/_apis/release/definitions?api-version=7.0`,
         );
 
@@ -26,6 +32,22 @@ export async function createAzureDevOpsService({
       } catch (error) {
         console.log(error);
         throw new NotFoundError('Failed to list release pipelines');
+      }
+    },
+
+    async listProjects(organization) {
+      console.log('organization', organization);
+      try {
+        const response = await azureApi.get(
+          `/${organization}/_apis/projects?api-version=7.1`,
+        );
+
+        logger.info('Listed projects');
+
+        return response.data;
+      } catch (error) {
+        console.log(error);
+        throw new NotFoundError('Failed to list projects');
       }
     },
   };
