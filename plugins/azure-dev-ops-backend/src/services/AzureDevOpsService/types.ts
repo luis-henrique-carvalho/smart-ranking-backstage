@@ -71,12 +71,12 @@ export interface AzureDevOpsReleasePipelinesResponse {
   value: AzureDevOpsReleasePipeline[];
 }
 
-export interface AzureDevOpsRepositoryrResponse {
+export interface AzureDevOpsRepositoriesrResponse {
   count: number;
-  value: AzureDevOpsRepository[];
+  value: AzureDevOpsRepositories[];
 }
 
-export interface AzureDevOpsRepository {
+export interface AzureDevOpsRepositories {
   id: string;
   name: string;
   project: {
@@ -99,5 +99,5 @@ export interface AzureDevOpsService {
   listRepositories(
     organization: string,
     project: string,
-  ): Promise<AzureDevOpsRepositoryrResponse>;
+  ): Promise<AzureDevOpsRepositoriesrResponse>;
 }

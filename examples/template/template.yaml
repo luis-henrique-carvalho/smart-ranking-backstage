@@ -315,12 +315,15 @@ spec:
               type: string
               title: Nome do Projeto
           ui:field: AzureProjectSelector
+          ui:options:
+            organization: luishenrique92250483
         description:
           title: Descrição
           type: string
           ui:widget: textarea
           ui:options:
             rows: 5
+
       dependencies:
         withReference:
           oneOf:
@@ -337,15 +340,21 @@ spec:
                     name:
                       type: string
                       title: Nome do Repositório
+                  ui:field: AzureRepositorySelector
+                  ui:options:
+                    project: backstage
+                    organization: luishenrique92250483
             - properties:
                 withReference:
                   enum: [true]
                 reference:
                   title: Referência
                   type: string
-                  ui:autofocus: true
+                  description: Selecione a referência para a release pipline.
+                  ui:field: AzureReleasePiplineSelector
                   ui:options:
-                    rows: 5
+                    project: backstage
+                    organization: luishenrique92250483
 
   steps:
     - action: debug:log

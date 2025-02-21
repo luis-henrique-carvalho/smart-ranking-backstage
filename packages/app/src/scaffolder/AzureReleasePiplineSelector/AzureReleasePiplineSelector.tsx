@@ -15,9 +15,10 @@ export const AzureReleasePiplineSelector = ({
     rawErrors,
     required,
     formData,
+    uiSchema
 }: FieldExtensionComponentProps<string>) => {
-    const org = 'luishenrique92250483';
-    const project = 'backstage';
+    const org = uiSchema['ui:options']!.organization as string;
+    const project = uiSchema['ui:options']!.project as string;
 
     const { pipelines, loading, error } = useAzureDevOpsPipelines(org, project);
 

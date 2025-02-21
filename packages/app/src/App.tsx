@@ -41,6 +41,8 @@ import { AzureCommitsPage } from '@internal/backstage-plugin-azure-commits';
 import { AzureReleasePiplineSelectorExtension } from './scaffolder/AzureReleasePiplineSelector';
 import { ScaffolderFieldExtensions } from '@backstage/plugin-scaffolder-react';
 import { AzureProjectSelectorExtension } from './scaffolder/AzureProjectSelector';
+import { AzureRepositorySelector } from './scaffolder/AzureRepositorySelector/AzureRepositorySelector';
+import { AzureRepositorySelectorExtension } from './scaffolder/AzureRepositorySelector';
 
 const app = createApp({
   apis,
@@ -109,6 +111,7 @@ const routes = (
         <ScaffolderFieldExtensions>
           <AzureReleasePiplineSelectorExtension />
           <AzureProjectSelectorExtension />
+          <AzureRepositorySelectorExtension />
         </ScaffolderFieldExtensions>
       </ScaffolderPage>
     } />

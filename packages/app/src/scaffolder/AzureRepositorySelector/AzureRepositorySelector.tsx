@@ -7,28 +7,29 @@ import InputLabel from '@material-ui/core/InputLabel';
 import Select from '@material-ui/core/Select';
 import MenuItem from '@material-ui/core/MenuItem';
 import CircularProgress from '@material-ui/core/CircularProgress';
-import { useAzureDevOpsProject } from './hooks/useAzureDevOpsProject';
-import { AzureDevOpsProjects } from './types';
+import { useAzureDevOpsRepositories } from './hooks/useAzureDevOpsRepositories';
+import { AzureDevOpsRepositories } from './types';
 
-export const AzureProjectSelector = ({
+export const AzureRepositorySelector = ({
     onChange,
     rawErrors,
     required,
     formData,
-    uiSchema
+    uiSchema,
 }: FieldExtensionComponentProps<{
     id: string;
     name: string;
 }>) => {
     const organization = uiSchema['ui:options']!.organization as string;
+    const project = uiSchema['ui:options']!.project as string;
 
-    const { projects, loading, error } = useAzureDevOpsProject(organization);
+    const { repositories, loading, error } = useAzureDevOpsRepositories(organization, project);
 
     if (loading) {
         return (
             <FormControl margin="normal" fullWidth>
                 <CircularProgress size={24} />
-                <FormHelperText>Loading projects...</FormHelperText>
+                <FormHelperText>Loading repositories...</FormHelperText>
             </FormControl>
         );
     }
@@ -48,41 +49,48 @@ export const AzureProjectSelector = ({
             error={rawErrors?.length > 0 && !formData}
             fullWidth
         >
-            <InputLabel id="azure-project-label">Projects</InputLabel>
+            <InputLabel id="azure-repository-label">Repositories</InputLabel>
             <Select
-                labelId="azure-project-label"
-                value={formData ? formData.name : ''}
+                labelId="azure-repository-label"
+                value={formData?.id || ''}
                 onChange={e => {
-                    const selectedProject = projects.find(
-                        project => project.id.toString() === e.target.value
+                    const selectedRepository = repositories.find(
+                        repository => repository.id.toString() === e.target.value
                     );
-                    if (selectedProject) {
-                        onChange({ id: selectedProject.id, name: selectedProject.name });
+                    if (selectedRepository) {
+                        onChange({ id: selectedRepository.id, name: selectedRepository.name });
                     }
                 }}
-                label="Projects"
+                displayEmpty
+                MenuProps={{
+                    PaperProps: {
+                        style: {
+                            maxHeight: 250, // Define um limite para a altura do menu
+                            overflowY: 'auto',
+                        },
+                    },
+                }}
             >
-                {projects.map((project: AzureDevOpsProjects) => (
-                    <MenuItem key={project.id} value={project.id.toString()}>
-                        {project.name}
+                {repositories.map((repository: AzureDevOpsRepositories) => (
+                    <MenuItem key={repository.id} value={repository.id.toString()}>
+                        {repository.name}
                     </MenuItem>
                 ))}
             </Select>
             <FormHelperText>
                 {rawErrors?.length > 0 && !formData
-                    ? 'You must select a project'
-                    : 'Select an Azure DevOps Project'}
+                    ? 'You must select a repository'
+                    : 'Select an Azure DevOps repository'}
             </FormHelperText>
         </FormControl>
     );
 };
 
-
-export const AzureProjectSelectorValidation = (
+export const AzureRepositorySelectorValidation = (
     value: { id: string; name: string },
     validation: FieldValidation,
 ) => {
     if (!value) {
-        validation.addError('You must select a project');
+        validation.addError('You must select a repository');
     }
 };
