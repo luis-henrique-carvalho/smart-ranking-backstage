@@ -270,3 +270,109 @@ spec:
       input:
         repoContentsUrl: ${{ steps['publish-azure'].output.repoContentsUrl }}
         catalogInfoPath: '/catalog-info.yaml'
+
+---
+apiVersion: scaffolder.backstage.io/v1beta3
+kind: Template
+metadata:
+  name: create-azure-resease-pipline
+  title: Create Azure Release Pipline
+  description: Create a new Azure Release Pipline
+  tags:
+    - pipeline
+    - azure
+spec:
+  owner: user:guest
+  type: service
+
+  parameters:
+    - title: Informações da Release Pipline
+      required:
+        - pipelineName
+        - withReference
+        - project
+      properties:
+        pipelineName:
+          title: Nome da Release Pipline
+          type: string
+          description: Selecione o nome da release pipline.
+          ui:autofocus: true
+          ui:options:
+            rows: 5
+        withReference:
+          title: Com Referência
+          description: Selecione se deseja criar a release pipline com referência.
+          type: boolean
+          ui:widget: radio
+        project:
+          title: Projeto
+          type: object
+          properties:
+            id:
+              type: string
+              title: ID do Projeto
+            name:
+              type: string
+              title: Nome do Projeto
+          ui:field: AzureProjectSelector
+        description:
+          title: Descrição
+          type: string
+          ui:widget: textarea
+          ui:options:
+            rows: 5
+      dependencies:
+        withReference:
+          oneOf:
+            - properties:
+                withReference:
+                  enum: [false]
+                repository:
+                  title: Repositório do Artefato
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                      title: ID do Repositório
+                    name:
+                      type: string
+                      title: Nome do Repositório
+            - properties:
+                withReference:
+                  enum: [true]
+                reference:
+                  title: Referência
+                  type: string
+                  ui:autofocus: true
+                  ui:options:
+                    rows: 5
+
+  steps:
+    - action: debug:log
+      id: write-debug-line
+      name: pipleline name
+      input:
+        message: |
+          name: ${{ parameters.pipelineName }}
+          project: ${{ parameters.project }}
+          withReference: ${{ parameters.withReference }}
+          description: ${{ parameters.description }}
+          repository: ${{ parameters.repository }}
+          reference: ${{ parameters.reference }}
+
+    - action: azure:create-release-pipline
+      id: create-release-pipline
+      name: Create Release Pipline
+      input:
+        name: ${{ parameters.pipelineName }}
+        project: ${{ parameters.project }}
+        organization: luishenrique92250483
+        withReference: ${{ parameters.withReference }}
+        decription: ${{ parameters.description }}
+        repository: ${{ parameters.repository }}
+        reference: ${{ parameters.reference }}
+
+  output:
+    links:
+      - title: Release Pipline
+        url: ${{ steps['create-release-pipline'].output.releaseUrl }}

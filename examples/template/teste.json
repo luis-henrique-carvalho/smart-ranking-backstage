@@ -1,0 +1,208 @@
+{
+    "definitionId": 28,
+    "description": "dasdasdasd",
+    "artifacts": [
+        {
+            "alias": "_teste-8465465465",
+            "instanceReference": {
+                "id": "master",
+                "name": "master"
+            }
+        }
+    ],
+    "manualEnvironments": [
+        {
+            "id": 1,
+            "name": "Stage 1",
+            "rank": 1,
+            "owner": {
+                "displayName": "Luis henrique",
+                "url": "https://spsprodsbr2.vssps.visualstudio.com/A0bd06cba-8e09-4cd6-9774-09a80494863f/_apis/Identities/3bb282ef-9d3e-6522-9aa2-d0d9eb694d74",
+                "_links": {
+                    "avatar": {
+                        "href": "https://dev.azure.com/luishenrique92250483/_apis/GraphProfile/MemberAvatars/msa.M2JiMjgyZWYtOWQzZS03NTIyLTlhYTItZDBkOWViNjk0ZDc0"
+                    }
+                },
+                "id": "3bb282ef-9d3e-6522-9aa2-d0d9eb694d74",
+                "uniqueName": "luishenrique9225@gmail.com",
+                "imageUrl": "https://dev.azure.com/luishenrique92250483/_apis/GraphProfile/MemberAvatars/msa.M2JiMjgyZWYtOWQzZS03NTIyLTlhYTItZDBkOWViNjk0ZDc0",
+                "descriptor": "msa.M2JiMjgyZWYtOWQzZS03NTIyLTlhYTItZDBkOWViNjk0ZDc0"
+            },
+            "variables": {},
+            "variableGroups": [],
+            "preDeployApprovals": {
+                "approvals": [
+                    {
+                        "rank": 1,
+                        "isAutomated": true,
+                        "isNotificationOn": false,
+                        "id": 1
+                    }
+                ],
+                "approvalOptions": {
+                    "requiredApproverCount": null,
+                    "releaseCreatorCanBeApprover": false,
+                    "autoTriggeredAndPreviousEnvironmentApprovedCanBeSkipped": false,
+                    "enforceIdentityRevalidation": false,
+                    "timeoutInMinutes": 0,
+                    "executionOrder": "beforeGates"
+                }
+            },
+            "deployStep": {
+                "id": 2
+            },
+            "postDeployApprovals": {
+                "approvals": [
+                    {
+                        "rank": 1,
+                        "isAutomated": true,
+                        "isNotificationOn": false,
+                        "id": 3
+                    }
+                ],
+                "approvalOptions": {
+                    "requiredApproverCount": null,
+                    "releaseCreatorCanBeApprover": false,
+                    "autoTriggeredAndPreviousEnvironmentApprovedCanBeSkipped": false,
+                    "enforceIdentityRevalidation": false,
+                    "timeoutInMinutes": 0,
+                    "executionOrder": "afterSuccessfulGates"
+                }
+            },
+            "deployPhases": [
+                {
+                    "deploymentInput": {
+                        "parallelExecution": {
+                            "parallelExecutionType": "none"
+                        },
+                        "agentSpecification": null,
+                        "skipArtifactsDownload": false,
+                        "artifactsDownloadInput": {
+                            "downloadInputs": []
+                        },
+                        "queueId": 4,
+                        "demands": [],
+                        "enableAccessToken": false,
+                        "timeoutInMinutes": 0,
+                        "jobCancelTimeoutInMinutes": 1,
+                        "condition": "succeeded()",
+                        "overrideInputs": {}
+                    },
+                    "rank": 1,
+                    "phaseType": "agentBasedDeployment",
+                    "name": "Agent job",
+                    "refName": null,
+                    "workflowTasks": [
+                        {
+                            "environment": {},
+                            "taskId": "72ba822e-4ed5-42aa-bed0-912aec426ab0",
+                            "version": "1.*",
+                            "name": "Task group: Preaparar Variáveis ",
+                            "refName": "",
+                            "enabled": true,
+                            "alwaysRun": true,
+                            "continueOnError": true,
+                            "timeoutInMinutes": 0,
+                            "retryCountOnTaskFailure": 0,
+                            "definitionType": "metaTask",
+                            "overrideInputs": {},
+                            "condition": "succeededOrFailed()",
+                            "inputs": {}
+                        },
+                        {
+                            "environment": {},
+                            "taskId": "a24672e8-4113-4a81-b9ad-34499ff534fb",
+                            "version": "1.*",
+                            "name": "Task group: Vault ",
+                            "refName": "",
+                            "enabled": true,
+                            "alwaysRun": true,
+                            "continueOnError": true,
+                            "timeoutInMinutes": 0,
+                            "retryCountOnTaskFailure": 0,
+                            "definitionType": "metaTask",
+                            "overrideInputs": {},
+                            "condition": "succeededOrFailed()",
+                            "inputs": {}
+                        },
+                        {
+                            "environment": {},
+                            "taskId": "668c5d19-11c3-491d-9cc5-107a2cb2f44a",
+                            "version": "1.*",
+                            "name": "Task group: DNS ",
+                            "refName": "",
+                            "enabled": true,
+                            "alwaysRun": true,
+                            "continueOnError": true,
+                            "timeoutInMinutes": 0,
+                            "retryCountOnTaskFailure": 0,
+                            "definitionType": "metaTask",
+                            "overrideInputs": {},
+                            "condition": "succeededOrFailed()",
+                            "inputs": {}
+                        }
+                    ]
+                }
+            ],
+            "environmentOptions": {
+                "emailNotificationType": "OnlyOnFailure",
+                "emailRecipients": "release.environment.owner;release.creator",
+                "skipArtifactsDownload": false,
+                "timeoutInMinutes": 0,
+                "enableAccessToken": false,
+                "publishDeploymentStatus": true,
+                "badgeEnabled": false,
+                "autoLinkWorkItems": false,
+                "pullRequestDeploymentEnabled": false
+            },
+            "demands": [],
+            "conditions": [
+                {
+                    "name": "ReleaseStarted",
+                    "conditionType": "event",
+                    "value": "",
+                    "result": null
+                }
+            ],
+            "executionPolicy": {
+                "concurrencyCount": 1,
+                "queueDepthCount": 0
+            },
+            "schedules": [],
+            "currentRelease": {
+                "id": 0,
+                "url": "https://vsrm.dev.azure.com/luishenrique92250483/c6a12f6e-f9ea-4dd4-90cf-387cc78e9f80/_apis/Release/releases/0",
+                "_links": {}
+            },
+            "retentionPolicy": {
+                "daysToKeep": 30,
+                "releasesToKeep": 3,
+                "retainBuild": true
+            },
+            "processParameters": {},
+            "properties": {
+                "BoardsEnvironmentType": {
+                    "$type": "System.String",
+                    "$value": "unmapped"
+                },
+                "LinkBoardsWorkItems": {
+                    "$type": "System.String",
+                    "$value": "False"
+                }
+            },
+            "preDeploymentGates": {
+                "id": 0,
+                "gatesOptions": null,
+                "gates": []
+            },
+            "postDeploymentGates": {
+                "id": 0,
+                "gatesOptions": null,
+                "gates": []
+            },
+            "environmentTriggers": [],
+            "badgeUrl": "https://vsrm.dev.azure.com/luishenrique92250483/_apis/public/Release/badge/c6a12f6e-f9ea-4dd4-90cf-387cc78e9f80/1/1"
+        }
+    ],
+    "isDraft": false
+}

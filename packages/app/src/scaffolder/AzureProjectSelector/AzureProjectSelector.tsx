@@ -15,7 +15,10 @@ export const AzureProjectSelector = ({
     rawErrors,
     required,
     formData,
-}: FieldExtensionComponentProps<string>) => {
+}: FieldExtensionComponentProps<{
+    id: string;
+    name: string;
+}>) => {
     const organization = 'luishenrique92250483';
 
     const { projects, loading, error } = useAzureDevOpsProject(organization);
@@ -47,8 +50,15 @@ export const AzureProjectSelector = ({
             <InputLabel id="azure-project-label">Projects</InputLabel>
             <Select
                 labelId="azure-project-label"
-                value={formData || ''}
-                onChange={e => onChange(e.target.value as string)}
+                value={formData ? formData.name : ''}
+                onChange={e => {
+                    const selectedProject = projects.find(
+                        project => project.id.toString() === e.target.value
+                    );
+                    if (selectedProject) {
+                        onChange({ id: selectedProject.id, name: selectedProject.name });
+                    }
+                }}
                 label="Projects"
             >
                 {projects.map((project: AzureDevOpsProjects) => (
@@ -66,8 +76,9 @@ export const AzureProjectSelector = ({
     );
 };
 
+
 export const AzureProjectSelectorValidation = (
-    value: string,
+    value: { id: string; name: string },
     validation: FieldValidation,
 ) => {
     if (!value) {

@@ -16288,6 +16288,7 @@ __metadata:
     "@backstage/plugin-techdocs-backend": "npm:^1.11.4"
     app: "link:../app"
     backstage-plugin-azure-dev-ops-backend: "npm:^0.1.0"
+    backstage-plugin-scaffolder-backend-module-azure-create-release-pipline: "npm:^0.1.0"
     backstage-plugin-scaffolder-backend-module-create-azure-branch: "npm:^0.1.0"
     backstage-plugin-scaffolder-backend-module-create-azure-commit: "npm:^0.1.0"
     better-sqlite3: "npm:^9.0.0"
@@ -16321,6 +16322,18 @@ __metadata:
     express-promise-router: "npm:^4.1.0"
     supertest: "npm:^6.2.4"
     zod: "npm:^3.22.4"
+  languageName: unknown
+  linkType: soft
+
+"backstage-plugin-scaffolder-backend-module-azure-create-release-pipline@npm:^0.1.0, backstage-plugin-scaffolder-backend-module-azure-create-release-pipline@workspace:plugins/scaffolder-backend-module-azure-create-release-pipline":
+  version: 0.0.0-use.local
+  resolution: "backstage-plugin-scaffolder-backend-module-azure-create-release-pipline@workspace:plugins/scaffolder-backend-module-azure-create-release-pipline"
+  dependencies:
+    "@backstage/backend-plugin-api": "npm:^1.1.0"
+    "@backstage/cli": "npm:^0.29.4"
+    "@backstage/plugin-scaffolder-node": "npm:^0.6.2"
+    "@backstage/plugin-scaffolder-node-test-utils": "npm:^0.1.17"
+    axios: "npm:^1.7.9"
   languageName: unknown
   linkType: soft
 

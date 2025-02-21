@@ -112,4 +112,5 @@ backend.add(
   import('backstage-plugin-scaffolder-backend-module-create-azure-commit'),
 );
 backend.add(import('backstage-plugin-azure-dev-ops-backend'));
+backend.add(import('backstage-plugin-scaffolder-backend-module-azure-create-release-pipline'));
 backend.start();

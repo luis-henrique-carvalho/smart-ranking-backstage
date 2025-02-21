@@ -47,6 +47,7 @@
     "@backstage/plugin-techdocs-backend": "^1.11.4",
     "app": "link:../app",
     "backstage-plugin-azure-dev-ops-backend": "^0.1.0",
+    "backstage-plugin-scaffolder-backend-module-azure-create-release-pipline": "^0.1.0",
     "backstage-plugin-scaffolder-backend-module-create-azure-branch": "^0.1.0",
     "backstage-plugin-scaffolder-backend-module-create-azure-commit": "^0.1.0",
     "better-sqlite3": "^9.0.0",
