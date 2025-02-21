@@ -71,10 +71,33 @@ export interface AzureDevOpsReleasePipelinesResponse {
   value: AzureDevOpsReleasePipeline[];
 }
 
+export interface AzureDevOpsRepositoryrResponse {
+  count: number;
+  value: AzureDevOpsRepository[];
+}
+
+export interface AzureDevOpsRepository {
+  id: string;
+  name: string;
+  project: {
+    id: string;
+    name: string;
+    url: string;
+    state: string;
+    revision: number;
+    visibility: string;
+    lastUpdateTime: string;
+  };
+}
+
 export interface AzureDevOpsService {
   listReleasePipelines(
     organization: string,
     project: string,
   ): Promise<AzureDevOpsReleasePipelinesResponse>;
-  listProjects(organization: string): Promise<string[]>;
+  listProjects(organization: string): Promise<AzureDevOpsProjectsdResponse>;
+  listRepositories(
+    organization: string,
+    project: string,
+  ): Promise<AzureDevOpsRepositoryrResponse>;
 }

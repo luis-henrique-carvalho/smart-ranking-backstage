@@ -45,5 +45,21 @@ export async function createRouter({
     }
   });
 
+  router.get('/repositories/:organization/:project', async (req, res) => {
+    try {
+      const repositories = await azureDevOpsService.listRepositories(
+        req.params.organization,
+        req.params.project,
+      );
+      res.json(repositories);
+    } catch (error: any) {
+      if (error.name === 'NotFoundError') {
+        res.status(404).json({ error: error });
+      } else {
+        res.status(500).json({ error: 'Internal Server Error' });
+      }
+    }
+  });
+
   return router;
 }

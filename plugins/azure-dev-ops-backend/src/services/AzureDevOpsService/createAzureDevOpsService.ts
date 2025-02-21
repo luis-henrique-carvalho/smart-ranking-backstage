@@ -50,5 +50,20 @@ export async function createAzureDevOpsService({
         throw new NotFoundError('Failed to list projects');
       }
     },
+
+    async listRepositories(organization, projectName) {
+      try {
+        const response = await azureApi.get(
+          `/${organization}/${projectName}/_apis/git/repositories?api-version=7.1`,
+        );
+
+        logger.info('Listed repositories');
+
+        return response.data;
+      } catch (error) {
+        logger.error(`Failed to list repositories${error}`);
+        throw new NotFoundError('Failed to list repositories');
+      }
+    },
   };
 }
