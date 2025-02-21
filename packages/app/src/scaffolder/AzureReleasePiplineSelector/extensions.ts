@@ -7,7 +7,7 @@ import {
 
 export const AzureReleasePiplineSelectorExtension = scaffolderPlugin.provide(
   createScaffolderFieldExtension({
-    name: 'AzureReleasePipelineSelector',
+    name: 'AzureReleasePiplineSelector',
     component: AzureReleasePiplineSelector,
     validation: AzureReleasePiplineSelectorValidation,
   }),
