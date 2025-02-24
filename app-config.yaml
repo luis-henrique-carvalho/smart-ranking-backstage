@@ -30,28 +30,27 @@ backend:
   database:
     client: pg
     connection:
-      host: localhost
-      port: 5432
-      user: postgres
-      password: <secret>
+      host: ${POSTGRES_HOST}
+      port: ${POSTGRES_PORT}
+      user: ${POSTGRES_USER}
+      password: ${POSTGRES_PASSWORD}
   # workingDirectory: /tmp # Use this to configure a working directory for the scaffolder, defaults to the OS temp-dir
 
 integrations:
   github:
     - host: github.com
-      # This is a Personal Access Token or PAT from GitHub. You can find out how to generate this token, and more information
-      # about setting up the GitHub integration here: https://backstage.io/docs/integrations/github/locations#configuration
       token: ${GITHUB_TOKEN}
-    ### Example for how to add your GitHub Enterprise instance using the API:
-    # - host: ghe.example.net
-    #   apiBaseUrl: https://ghe.example.net/api/v3
-    #   token: ${GHE_TOKEN}
   azure:
     - host: dev.azure.com
       token: ${AZURE_TOKEN}
 
 proxy:
-  {}
+  endpoints:
+    '/azure-devops':
+      target: 'https://dev.azure.com'
+      changeOrigin: true
+      secure: false
+
   ### Example for how to add a proxy endpoint for the frontend.
   ### A typical reason to do this is to handle HTTPS and CORS for internal services.
   # endpoints:
@@ -97,18 +96,7 @@ catalog:
     entityFilename: catalog-info.yaml
     pullRequestBranchName: backstage-integration
   rules:
-    - allow:
-        [
-          Component,
-          System,
-          API,
-          Resource,
-          Location,
-          Group,
-          User,
-          Template,
-          Location,
-        ]
+    - allow: [Component, System, API, Resource, Location, Group, User, Template]
   locations:
     # Local example data, file locations are relative to the backend process, typically `packages/backend`
     - type: file
@@ -134,6 +122,11 @@ catalog:
       rules:
         - allow:
             [Template, Component, System, API, Resource, Location, Group, User]
+
+    - type: url
+      target: https://github.com/luis-henrique-carvalho/backstage-templates/blob/main/all-templates.yaml
+      rules:
+        - allow: [Template, Location, Resource]
     ## Uncomment these lines to add more example data
     # - type: url
     #   target: https://github.com/backstage/backstage/blob/master/packages/catalog-model/examples/all.yaml

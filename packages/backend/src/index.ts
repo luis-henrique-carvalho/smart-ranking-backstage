@@ -105,5 +105,11 @@ const eventsModuleCatalogErrors = createBackendModule({
 
 backend.add(eventsModuleCatalogErrors);
 
+backend.add(
+  import('backstage-plugin-scaffolder-backend-module-create-azure-branch'),
+);
+backend.add(
+  import('backstage-plugin-scaffolder-backend-module-create-azure-commit'),
+);
 backend.add(import('@internal/backstage-plugin-simple-api-backend'));
 backend.start();
