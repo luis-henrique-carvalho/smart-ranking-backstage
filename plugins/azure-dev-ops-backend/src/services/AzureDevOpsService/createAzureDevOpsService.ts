@@ -13,8 +13,10 @@ export async function createAzureDevOpsService({
 }): Promise<AzureDevOpsService> {
   logger.info('Initializing AzureDevOpsService');
 
-  const releaseApiClient = new ApiClient('https://vsrm.dev.azure.com');
-  const azureApiClient = new ApiClient('https://dev.azure.com');
+  const releaseApiClient = new ApiClient(
+    process.env.AZURE_RELEASE_URL as string,
+  );
+  const azureApiClient = new ApiClient(process.env.AZURE_URL as string);
 
   const releaseApi = releaseApiClient.getClient();
   const azureApi = azureApiClient.getClient();

@@ -10,7 +10,7 @@ export const useAzureDevOpsProject = (organization: string) => {
     const fetchProjects = async () => {
       try {
         const response = await fetch(
-          `http://localhost:7007/api/azure-dev-ops/projects/${organization}`,
+          `${process.env.BACKSTAGE_API_BASE_URL}/api/azure-dev-ops/projects/${organization}`,
         );
 
         if (!response.ok) {

@@ -15,7 +15,7 @@ export const useAzureDevOpsRepositories = (
     const fetchRepositories = async () => {
       try {
         const response = await fetch(
-          `http://localhost:7007/api/azure-dev-ops/repositories/${organization}/${project}`,
+          `${process.env.BACKSTAGE_API_BASE_URL}/api/azure-dev-ops/repositories/${organization}/${project}`,
         );
 
         if (!response.ok) {
