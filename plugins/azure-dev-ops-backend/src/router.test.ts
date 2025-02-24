@@ -1,67 +1,145 @@
-import {
-  mockCredentials,
-  mockErrorHandler,
-  mockServices,
-} from '@backstage/backend-test-utils';
 import express from 'express';
 import request from 'supertest';
-
 import { createRouter } from './router';
-import { TodoListService } from './services/TodoListService/types';
+import { AzureDevOpsService } from './services/AzureDevOpsService/types';
 
-const mockTodoItem = {
-  title: 'Do the thing',
-  id: '123',
-  createdBy: mockCredentials.user().principal.userEntityRef,
-  createdAt: new Date().toISOString(),
-};
-
-// TEMPLATE NOTE:
-// Testing the router directly allows you to write a unit test that mocks the provided options.
 describe('createRouter', () => {
   let app: express.Express;
-  let todoListService: jest.Mocked<TodoListService>;
+  let azureDevOpsService: jest.Mocked<AzureDevOpsService>;
 
   beforeEach(async () => {
-    todoListService = {
-      createTodo: jest.fn(),
-      listTodos: jest.fn(),
-      getTodo: jest.fn(),
-    };
-    const router = await createRouter({
-      httpAuth: mockServices.httpAuth(),
-      todoListService,
-    });
+    azureDevOpsService = {
+      listReleasePipelines: jest.fn(),
+      listProjects: jest.fn(),
+      listRepositories: jest.fn(),
+    } as unknown as jest.Mocked<AzureDevOpsService>;
+
+    const router = await createRouter({ azureDevOpsService });
     app = express();
+    app.use(express.json());
     app.use(router);
-    app.use(mockErrorHandler());
   });
 
-  it('should create a TODO', async () => {
-    todoListService.createTodo.mockResolvedValue(mockTodoItem);
+  it('should return OK for /health', async () => {
+    const response = await request(app).get('/health');
+    expect(response.status).toBe(200);
+    expect(response.text).toBe('OK');
+  });
 
-    const response = await request(app).post('/todos').send({
-      title: 'Do the thing',
+  it('should list release pipelines', async () => {
+    azureDevOpsService.listReleasePipelines.mockResolvedValue({
+      count: 2,
+      value: [
+        { id: '1', name: 'Pipeline 1' },
+        { id: '2', name: 'Pipeline 2' },
+      ],
     });
 
-    expect(response.status).toBe(201);
-    expect(response.body).toEqual(mockTodoItem);
+    const response = await request(app).get(
+      '/release-pipelines/test-org/test-project',
+    );
+
+    expect(response.status).toBe(200);
+    expect(response.body).toEqual({
+      count: 2,
+      value: [
+        { id: '1', name: 'Pipeline 1' },
+        { id: '2', name: 'Pipeline 2' },
+      ],
+    });
   });
 
-  it('should not allow unauthenticated requests to create a TODO', async () => {
-    todoListService.createTodo.mockResolvedValue(mockTodoItem);
+  it('should return 404 if release pipelines are not found', async () => {
+    azureDevOpsService.listReleasePipelines.mockRejectedValue(
+      new Error('NotFoundError'),
+    );
 
-    // TEMPLATE NOTE:
-    // The HttpAuth mock service considers all requests to be authenticated as a
-    // mock user by default. In order to test other cases we need to explicitly
-    // pass an authorization header with mock credentials.
-    const response = await request(app)
-      .post('/todos')
-      .set('Authorization', mockCredentials.none.header())
-      .send({
-        title: 'Do the thing',
-      });
+    const response = await request(app).get(
+      '/release-pipelines/test-org/test-project',
+    );
 
-    expect(response.status).toBe(401);
+    expect(response.status).toBe(404);
+    expect(response.body).toEqual({ error: 'NotFoundError' });
+  });
+
+  it('should list projects', async () => {
+    azureDevOpsService.listProjects.mockResolvedValue({
+      count: 2,
+      value: [
+        { id: '1', name: 'Project 1' },
+        { id: '2', name: 'Project 2' },
+      ],
+    });
+
+    const response = await request(app).get('/projects/test-org');
+
+    expect(response.status).toBe(200);
+    expect(response.body).toEqual({
+      count: 2,
+      value: [
+        { id: '1', name: 'Project 1' },
+        { id: '2', name: 'Project 2' },
+      ],
+    });
+  });
+
+  it('should return 404 if projects are not found', async () => {
+    azureDevOpsService.listProjects.mockRejectedValue(
+      new Error('NotFoundError'),
+    );
+
+    const response = await request(app).get('/projects/test-org');
+
+    expect(response.status).toBe(404);
+    expect(response.body).toEqual({ error: 'NotFoundError' });
+  });
+
+  it('should list repositories', async () => {
+    azureDevOpsService.listRepositories.mockResolvedValue({
+      count: 2,
+      value: [
+        { id: '1', name: 'Repo 1' },
+        { id: '2', name: 'Repo 2' },
+      ],
+    });
+
+    const response = await request(app).get(
+      '/repositories/test-org/test-project',
+    );
+
+    expect(response.status).toBe(200);
+    expect(response.body).toEqual({
+      count: 2,
+      value: [
+        { id: '1', name: 'Repo 1' },
+        { id: '2', name: 'Repo 2' },
+      ],
+    });
+  });
+
+  it('should return 404 if repositories are not found', async () => {
+    azureDevOpsService.listRepositories.mockRejectedValue(
+      new Error('NotFoundError'),
+    );
+
+    const response = await request(app).get(
+      '/repositories/test-org/test-project',
+    );
+
+    expect(response.status).toBe(404);
+    expect(response.body).toEqual({ error: 'NotFoundError' });
+  });
+
+  it('should return 500 for internal server errors', async () => {
+    azureDevOpsService.listRepositories.mockRejectedValue(
+      new Error('Internal Server Error'),
+    );
+
+    const response = await request(app).get(
+      '/repositories/test-org/test-project',
+    );
+
+    expect(response.status).toBe(500);
+    expect(response.body).toEqual({ error: 'Internal Server Error' });
   });
 });

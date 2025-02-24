@@ -22,7 +22,7 @@ export async function createRouter({
       );
       res.json(pipelines);
     } catch (error: any) {
-      if (error.name === 'NotFoundError') {
+      if (error.message === 'NotFoundError') {
         res.status(404).json({ error: error.message });
       } else {
         res.status(500).json({ error: 'Internal Server Error' });
@@ -37,7 +37,7 @@ export async function createRouter({
       );
       res.json(projects);
     } catch (error: any) {
-      if (error.name === 'NotFoundError') {
+      if (error.message === 'NotFoundError') {
         res.status(404).json({ error: error.message });
       } else {
         res.status(500).json({ error: 'Internal Server Error' });
@@ -53,8 +53,8 @@ export async function createRouter({
       );
       res.json(repositories);
     } catch (error: any) {
-      if (error.name === 'NotFoundError') {
-        res.status(404).json({ error: error });
+      if (error.message === 'NotFoundError') {
+        res.status(404).json({ error: error.message });
       } else {
         res.status(500).json({ error: 'Internal Server Error' });
       }

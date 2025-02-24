@@ -1,47 +1,47 @@
 export interface AzureDevOpsReleasePipeline {
-  source: string;
-  revision: number;
-  description: string | null;
-  createdBy: {
-    displayName: string;
-    url: string;
-    _links: {
-      avatar: {
-        href: string;
-      };
-    };
-    id: string;
-    uniqueName: string;
-    imageUrl: string;
-    descriptor: string;
-  };
-  createdOn: string;
-  modifiedBy: {
-    displayName: string;
-    url: string;
-    _links: {
-      avatar: {
-        href: string;
-      };
-    };
-    id: string;
-    uniqueName: string;
-    imageUrl: string;
-    descriptor: string;
-  };
-  modifiedOn: string;
-  isDeleted: boolean;
-  isDisabled: boolean;
-  variableGroups: null;
-  releaseNameFormat: string;
-  comment: string;
-  properties: Record<string, unknown>;
-  id: number;
+  id: string;
   name: string;
-  path: string;
-  projectReference: null;
-  url: string;
-  _links: {
+  source?: string;
+  revision?: number;
+  description?: string | null;
+  createdBy?: {
+    displayName: string;
+    url: string;
+    _links: {
+      avatar: {
+        href: string;
+      };
+    };
+    id: string;
+    uniqueName: string;
+    imageUrl: string;
+    descriptor: string;
+  };
+  createdOn?: string;
+  modifiedBy?: {
+    displayName: string;
+    url: string;
+    _links: {
+      avatar: {
+        href: string;
+      };
+    };
+    id: string;
+    uniqueName: string;
+    imageUrl: string;
+    descriptor: string;
+  };
+  modifiedOn?: string;
+  isDeleted?: boolean;
+  isDisabled?: boolean;
+  variableGroups?: null;
+  releaseNameFormat?: string;
+  comment?: string;
+  properties?: Record<string, unknown>;
+  path?: string;
+  projectReference?: null;
+  url?: string;
+  _links?: {
     self: {
       href: string;
     };
@@ -54,11 +54,11 @@ export interface AzureDevOpsReleasePipeline {
 export interface AzureDevOpsProjects {
   id: string;
   name: string;
-  url: string;
-  state: string;
-  revision: number;
-  visibility: string;
-  lastUpdateTime: string;
+  url?: string;
+  state?: string;
+  revision?: number;
+  visibility?: string;
+  lastUpdateTime?: string;
 }
 
 export interface AzureDevOpsProjectsdResponse {
@@ -79,15 +79,7 @@ export interface AzureDevOpsRepositoriesrResponse {
 export interface AzureDevOpsRepositories {
   id: string;
   name: string;
-  project: {
-    id: string;
-    name: string;
-    url: string;
-    state: string;
-    revision: number;
-    visibility: string;
-    lastUpdateTime: string;
-  };
+  project?: AzureDevOpsProjects;
 }
 
 export interface AzureDevOpsService {
