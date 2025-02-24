@@ -45,6 +45,7 @@
     "@backstage/plugin-search-backend-module-techdocs": "^0.3.4",
     "@backstage/plugin-search-backend-node": "^1.3.6",
     "@backstage/plugin-techdocs-backend": "^1.11.4",
+    "@internal/backstage-plugin-simple-api-backend": "^0.1.0",
     "app": "link:../app",
     "backstage-plugin-scaffolder-backend-module-create-azure-branch": "^0.1.0",
     "backstage-plugin-scaffolder-backend-module-create-azure-commit": "^0.1.0",

@@ -1,0 +1,72 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Applications API",
+    "version": "1.0.0",
+    "description": "API for managment of applications"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:7007/api/simple-api"
+    }
+  ],
+  "paths": {
+    "/aplications": {
+      "get": {
+        "summary": "List all applications",
+        "responses": {
+          "200": {
+            "description": "List all applications",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "name": {
+                        "type": "string"
+                      },
+                      "technology": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Create a new application",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "technology": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Application created successfully"
+          },
+          "400": {
+            "description": "Invalid body formatting"
+          }
+        }
+      }
+    }
+  }
+}
