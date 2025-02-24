@@ -16,7 +16,7 @@ export async function createAzureDevOpsService({
   const releaseApiClient = new ApiClient(
     process.env.AZURE_RELEASE_URL as string,
   );
-  const azureApiClient = new ApiClient(process.env.AZURE_URL as string);
+  const azureApiClient = new ApiClient(process.env.AZURE_BASE_URL as string);
 
   const releaseApi = releaseApiClient.getClient();
   const azureApi = azureApiClient.getClient();
