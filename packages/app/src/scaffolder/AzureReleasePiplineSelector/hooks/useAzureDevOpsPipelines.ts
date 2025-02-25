@@ -1,10 +1,14 @@
 import { useState, useEffect } from 'react';
 import { AzureDevOpsReleasePipeline } from '../types';
+import { useApi, configApiRef } from '@backstage/core-plugin-api';
 
 export const useAzureDevOpsPipelines = (
   organization: string,
   project: string,
 ) => {
+  const config = useApi(configApiRef);
+  const apiBaseUrl = 'http://localhost:7007';
+
   const [pipelines, setPipelines] = useState<AzureDevOpsReleasePipeline[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -13,7 +17,7 @@ export const useAzureDevOpsPipelines = (
     const fetchPipelines = async () => {
       try {
         const response = await fetch(
-          `${process.env.BACKSTAGE_API_BASE_URL}/api/azure-dev-ops/release-pipelines/${organization}/${project}`,
+          `${apiBaseUrl}/api/azure-dev-ops/release-pipelines/${organization}/${project}`,
         );
 
         if (!response.ok) {
@@ -30,7 +34,7 @@ export const useAzureDevOpsPipelines = (
     };
 
     fetchPipelines();
-  }, [organization, project]);
+  }, [organization, project, apiBaseUrl]);
 
   return { pipelines, loading, error };
 };

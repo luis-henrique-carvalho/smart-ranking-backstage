@@ -1,10 +1,15 @@
 import { useState, useEffect } from 'react';
 import { AzureDevOpsRepositories } from '../types';
+import { useApi, configApiRef } from '@backstage/core-plugin-api';
 
 export const useAzureDevOpsRepositories = (
   organization: string,
   project: string,
 ) => {
+  const config = useApi(configApiRef);
+
+  const apiBaseUrl = 'http://localhost:7007';
+
   const [repositories, setRepositories] = useState<AzureDevOpsRepositories[]>(
     [],
   );
@@ -15,7 +20,7 @@ export const useAzureDevOpsRepositories = (
     const fetchRepositories = async () => {
       try {
         const response = await fetch(
-          `${process.env.BACKSTAGE_API_BASE_URL}/api/azure-dev-ops/repositories/${organization}/${project}`,
+          `${apiBaseUrl}/api/azure-dev-ops/repositories/${organization}/${project}`,
         );
 
         if (!response.ok) {
@@ -32,7 +37,7 @@ export const useAzureDevOpsRepositories = (
     };
 
     fetchRepositories();
-  }, [organization, project]);
+  }, [organization, project, apiBaseUrl]);
 
   return { repositories, loading, error };
 };

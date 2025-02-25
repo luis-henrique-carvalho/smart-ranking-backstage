@@ -1,7 +1,11 @@
 import { useState, useEffect } from 'react';
 import { AzureDevOpsProjects } from '../types';
+import { useApi, configApiRef } from '@backstage/core-plugin-api';
 
 export const useAzureDevOpsProject = (organization: string) => {
+  const config = useApi(configApiRef);
+  const apiBaseUrl = 'http://localhost:7007';
+
   const [projects, setProjects] = useState<AzureDevOpsProjects[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -10,7 +14,7 @@ export const useAzureDevOpsProject = (organization: string) => {
     const fetchProjects = async () => {
       try {
         const response = await fetch(
-          `${process.env.BACKSTAGE_API_BASE_URL}/api/azure-dev-ops/projects/${organization}`,
+          `${apiBaseUrl}/api/azure-dev-ops/projects/${organization}`,
         );
 
         if (!response.ok) {
@@ -27,7 +31,7 @@ export const useAzureDevOpsProject = (organization: string) => {
     };
 
     fetchProjects();
-  }, [organization]);
+  }, [organization, apiBaseUrl]);
 
   return { projects, loading, error };
 };
