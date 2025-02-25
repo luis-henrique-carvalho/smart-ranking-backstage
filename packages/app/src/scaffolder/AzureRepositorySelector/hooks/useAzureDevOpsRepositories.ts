@@ -7,7 +7,7 @@ export const useAzureDevOpsRepositories = (
   project: string,
 ) => {
   const config = useApi(configApiRef);
-
+  // TODO: Use the config object to get the API base URL
   const apiBaseUrl = 'http://localhost:7007';
 
   const [repositories, setRepositories] = useState<AzureDevOpsRepositories[]>(
