@@ -72,6 +72,8 @@
     ]
   },
   "files": [
+    "config.d.ts",
     "dist"
-  ]
+  ],
+  "configSchema": "config.d.ts"
 }

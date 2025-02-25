@@ -1,6 +1,8 @@
 app:
   title: Scaffolded Backstage App
   baseUrl: http://localhost:3000
+  env:
+    api_base_url: ${BACKSTAGE_API_BASE_URL}
 
 organization:
   name: My Company
