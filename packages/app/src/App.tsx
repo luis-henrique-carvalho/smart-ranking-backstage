@@ -38,6 +38,11 @@ import { RequirePermission } from '@backstage/plugin-permission-react';
 import { catalogEntityCreatePermission } from '@backstage/plugin-catalog-common/alpha';
 import { githubAuthApiRef } from '@backstage/core-plugin-api';
 import { AzureCommitsPage } from '@internal/backstage-plugin-azure-commits';
+import { AzureReleasePiplineSelectorExtension } from './scaffolder/AzureReleasePiplineSelector';
+import { ScaffolderFieldExtensions } from '@backstage/plugin-scaffolder-react';
+import { AzureProjectSelectorExtension } from './scaffolder/AzureProjectSelector';
+import { AzureRepositorySelector } from './scaffolder/AzureRepositorySelector/AzureRepositorySelector';
+import { AzureRepositorySelectorExtension } from './scaffolder/AzureRepositorySelector';
 
 const app = createApp({
   apis,
@@ -93,16 +98,23 @@ const routes = (
         <ReportIssue />
       </TechDocsAddons>
     </Route>
-    <Route path="/create" element={<ScaffolderPage
-      groups={
-        [
+    <Route path="/create" element={
+      <ScaffolderPage
+        groups={[
           {
             title: "Recommended",
             filter: entity =>
               entity?.metadata?.tags?.includes('recommended') ?? false,
           },
         ]}
-    />} />
+      >
+        <ScaffolderFieldExtensions>
+          <AzureReleasePiplineSelectorExtension />
+          <AzureProjectSelectorExtension />
+          <AzureRepositorySelectorExtension />
+        </ScaffolderFieldExtensions>
+      </ScaffolderPage>
+    } />
     <Route path="/api-docs" element={<ApiExplorerPage />} />
     <Route
       path="/catalog-import"
