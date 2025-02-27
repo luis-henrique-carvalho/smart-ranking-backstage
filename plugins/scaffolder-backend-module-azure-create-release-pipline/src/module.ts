@@ -1,4 +1,7 @@
-import { createBackendModule } from '@backstage/backend-plugin-api';
+import {
+  coreServices,
+  createBackendModule,
+} from '@backstage/backend-plugin-api';
 import { scaffolderActionsExtensionPoint } from '@backstage/plugin-scaffolder-node/alpha';
 import { createExampleAction } from './actions/azure-create-release-pipline';
 
@@ -12,9 +15,10 @@ export const scaffolderModule = createBackendModule({
     registerInit({
       deps: {
         scaffolderActions: scaffolderActionsExtensionPoint,
+        config: coreServices.rootConfig,
       },
-      async init({ scaffolderActions }) {
-        scaffolderActions.addActions(createExampleAction());
+      async init({ scaffolderActions, config }) {
+        scaffolderActions.addActions(createExampleAction(config));
       },
     });
   },
