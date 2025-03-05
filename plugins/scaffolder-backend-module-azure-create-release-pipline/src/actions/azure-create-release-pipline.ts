@@ -1,4 +1,5 @@
 import { createTemplateAction } from '@backstage/plugin-scaffolder-node';
+import { Config } from '@backstage/config';
 import api from '../config/api';
 
 /**
@@ -10,7 +11,7 @@ import api from '../config/api';
  *
  * @public
  */
-export function createExampleAction() {
+export function createExampleAction(config: Config) {
   // For more information on how to define custom actions, see
   //   https://backstage.io/docs/features/software-templates/writing-custom-actions
   return createTemplateAction<{
@@ -268,6 +269,29 @@ export function createExampleAction() {
         ? referenceEnvironments
         : defautEnvironments;
 
+      const actionEnvironmentConfig: { [key: string]: any } = config.get(
+        'plugins.actions.azure-create-release-pipline.env',
+      );
+
+      if (actionEnvironmentConfig) {
+        environments.forEach((environment: any) => {
+          const envConfig =
+            actionEnvironmentConfig[environment.name.toLowerCase()];
+
+          if (envConfig) {
+            environment.deployPhases.forEach((deployPhase: any) => {
+              deployPhase.workflowTasks.forEach((workflowTask: any) => {
+                Object.keys(envConfig).forEach(key => {
+                  if (workflowTask.inputs[key]) {
+                    workflowTask.inputs[key] = envConfig[key];
+                  }
+                });
+              });
+            });
+          }
+        });
+      }
+
       const createRealeaseDefinitionBody = {
         name: name,
         environments: environments,
@@ -275,7 +299,6 @@ export function createExampleAction() {
       };
 
       ctx.logger.info(`Creating release definition`);
-      ctx.logger.info(JSON.stringify(createRealeaseDefinitionBody));
 
       const response = await api.post(
         realeaseDefinitionUrl,

@@ -7,6 +7,24 @@ jest.mock('../config/api');
 describe('createReleasePiplineAction', () => {
   const mockPost = jest.fn();
   const mockGet = jest.fn();
+  const mockConfig = {
+    get: jest.fn().mockReturnValue('some-environment-value'),
+    has: jest.fn().mockReturnValue(true),
+    keys: jest.fn().mockReturnValue([]),
+    getOptional: jest.fn(),
+    getConfig: jest.fn(),
+    getConfigArray: jest.fn(),
+    getOptionalConfig: jest.fn(),
+    getOptionalConfigArray: jest.fn(),
+    getNumber: jest.fn(),
+    getOptionalNumber: jest.fn(),
+    getBoolean: jest.fn(),
+    getOptionalBoolean: jest.fn(),
+    getString: jest.fn(),
+    getOptionalString: jest.fn(),
+    getStringArray: jest.fn(),
+    getOptionalStringArray: jest.fn(),
+  };
 
   beforeEach(() => {
     jest.resetAllMocks();
@@ -50,7 +68,7 @@ describe('createReleasePiplineAction', () => {
 
     const ctx = createMockActionContext({ input });
 
-    const action = createExampleAction();
+    const action = createExampleAction(mockConfig);
     await action.handler(ctx);
 
     expect(mockPost).toHaveBeenCalledTimes(2);
@@ -145,7 +163,7 @@ describe('createReleasePiplineAction', () => {
 
     const ctx = createMockActionContext({ input });
 
-    const action = createExampleAction();
+    const action = createExampleAction(mockConfig);
     await action.handler(ctx);
 
     expect(mockGet).toHaveBeenCalledTimes(1);
