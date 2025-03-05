@@ -1,0 +1,14 @@
+{
+    "scores": [
+        {
+            "id": "coverage",
+            "title": "Cobertura de Testes",
+            "score": 85
+        },
+        {
+            "id": "open-issues",
+            "title": "Issues Abertas",
+            "score": 20
+        }
+    ]
+}
