@@ -43,6 +43,7 @@ import { ScaffolderFieldExtensions } from '@backstage/plugin-scaffolder-react';
 import { AzureProjectSelectorExtension } from './scaffolder/AzureProjectSelector';
 import { AzureRepositorySelector } from './scaffolder/AzureRepositorySelector/AzureRepositorySelector';
 import { AzureRepositorySelectorExtension } from './scaffolder/AzureRepositorySelector';
+import { ScoreBoardPage } from '@oriflame/backstage-plugin-score-card';
 
 const app = createApp({
   apis,
@@ -89,6 +90,7 @@ const routes = (
     >
       {entityPage}
     </Route>
+    <Route path="/score-board" element={<ScoreBoardPage />} />
     <Route path="/docs" element={<TechDocsIndexPage />} />
     <Route
       path="/docs/:namespace/:kind/:name/*"

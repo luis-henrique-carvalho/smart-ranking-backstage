@@ -62,6 +62,7 @@ import {
   isKubernetesAvailable,
 } from '@backstage/plugin-kubernetes';
 import { AzureCommitsPage } from '@internal/backstage-plugin-azure-commits';
+import { EntityScoreCardContent, EntityScoreCardTable } from '@oriflame/backstage-plugin-score-card';
 
 const techdocsContent = (
   <EntityTechdocsContent>
@@ -178,6 +179,14 @@ const serviceEntityPage = (
         </Grid>
         <Grid item md={6}>
           <EntityConsumedApisCard />
+        </Grid>
+      </Grid>
+    </EntityLayout.Route>
+
+    <EntityLayout.Route path="/score" title="Score">
+      <Grid container spacing={3} alignItems="stretch">
+        <Grid item xs={12}>
+          <EntityScoreCardTable />
         </Grid>
       </Grid>
     </EntityLayout.Route>
