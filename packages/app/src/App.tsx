@@ -43,6 +43,7 @@ import { ScaffolderFieldExtensions } from '@backstage/plugin-scaffolder-react';
 import { AzureProjectSelectorExtension } from './scaffolder/AzureProjectSelector';
 import { AzureRepositorySelector } from './scaffolder/AzureRepositorySelector/AzureRepositorySelector';
 import { AzureRepositorySelectorExtension } from './scaffolder/AzureRepositorySelector';
+import { RbacPage } from '@backstage-community/plugin-rbac';
 
 const app = createApp({
   apis,
@@ -83,6 +84,7 @@ const routes = (
   <FlatRoutes>
     <Route path="/" element={<Navigate to="catalog" />} />
     <Route path="/catalog" element={<CatalogIndexPage />} />
+    <Route path="/rbac" element={<RbacPage />} />;
     <Route
       path="/catalog/:namespace/:kind/:name"
       element={<CatalogEntityPage />}
