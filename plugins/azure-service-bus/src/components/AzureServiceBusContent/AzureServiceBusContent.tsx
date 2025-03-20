@@ -46,6 +46,11 @@ export const AzureServiceBusContent = () => {
     setModalOpen(true);
   };
 
+  const handleCloseModal = () => {
+    setSelectedResource(null);
+    setModalOpen(false);
+  }
+
   const handleSubmit = async (data: PipelineParams) => {
     setLoading(true);
     try {
@@ -57,6 +62,7 @@ export const AzureServiceBusContent = () => {
       setLoading(false);
       setAlertOpen(true);
       setModalOpen(false);
+      setTimeout(() => setAlertOpen(false), 5000);
     }
   };
 
@@ -102,7 +108,7 @@ export const AzureServiceBusContent = () => {
       </Content>
 
       {selectedResource && (
-        <ReprocessModal open={modalOpen} onClose={() => setModalOpen(false)} title="Reifileirar Dead Letter">
+        <ReprocessModal open={modalOpen} onClose={handleCloseModal} title="Reprocessar Dead Letter">
           <ReprocessForm
             onSubmit={handleSubmit}
             serviceName={serviceName}
