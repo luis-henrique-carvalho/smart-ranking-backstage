@@ -62,6 +62,7 @@ import {
   isKubernetesAvailable,
 } from '@backstage/plugin-kubernetes';
 import { AzureCommitsPage } from '@internal/backstage-plugin-azure-commits';
+import { AzureServiceBusPage } from '@internal/backstage-plugin-azure-service-bus';
 
 const techdocsContent = (
   <EntityTechdocsContent>
@@ -200,6 +201,11 @@ const serviceEntityPage = (
     <EntityLayout.Route path="/azure-commits" title="Azure Commits">
       <AzureCommitsPage />
     </EntityLayout.Route>
+
+    <EntityLayout.Route path="/azure-service-bus" title="Azure Service Bus">
+      <AzureServiceBusPage />
+    </EntityLayout.Route>
+
   </EntityLayout>
 );
 
