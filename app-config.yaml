@@ -144,3 +144,7 @@ kubernetes:
 permission:
   # setting this to `false` will disable permissions
   enabled: true
+plugins:
+  azureServiceBus:
+    piplineUrl: ${AZURE_SERVICE_BUS_PIPELINE_URL}
+    piplineToken: ${AZURE_TOKEN}

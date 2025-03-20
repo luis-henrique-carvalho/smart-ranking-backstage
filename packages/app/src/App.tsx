@@ -43,6 +43,7 @@ import { ScaffolderFieldExtensions } from '@backstage/plugin-scaffolder-react';
 import { AzureProjectSelectorExtension } from './scaffolder/AzureProjectSelector';
 import { AzureRepositorySelector } from './scaffolder/AzureRepositorySelector/AzureRepositorySelector';
 import { AzureRepositorySelectorExtension } from './scaffolder/AzureRepositorySelector';
+import { AzureServiceBusPage } from '@internal/backstage-plugin-azure-service-bus';
 
 const app = createApp({
   apis,
@@ -130,6 +131,7 @@ const routes = (
     <Route path="/settings" element={<UserSettingsPage />} />
     <Route path="/catalog-graph" element={<CatalogGraphPage />} />
     <Route path="/azure-commits" element={<AzureCommitsPage />} />
+    <Route path="/azure-service-bus" element={<AzureServiceBusPage />} />
   </FlatRoutes>
 );
 
