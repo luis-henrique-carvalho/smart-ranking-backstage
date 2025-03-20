@@ -4,8 +4,7 @@ import { useApi, configApiRef } from '@backstage/core-plugin-api';
 
 export const useAzureDevOpsProject = (organization: string) => {
   const config = useApi(configApiRef);
-  // TODO: Use the config object to get the API base URL
-  const apiBaseUrl = 'http://localhost:7007';
+  const apiBaseUrl = config.getString('app.env.api_base_url');
 
   const [projects, setProjects] = useState<AzureDevOpsProjects[]>([]);
   const [loading, setLoading] = useState(true);
