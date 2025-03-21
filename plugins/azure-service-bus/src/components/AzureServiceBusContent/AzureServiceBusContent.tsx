@@ -8,8 +8,8 @@ import { useEntity, MissingAnnotationEmptyState } from '@backstage/plugin-catalo
 import ReprocessModal from './components/ReprocessModal';
 import ReprocessForm from './components/ReprocessForm';
 import { useApi, configApiRef } from '@backstage/core-plugin-api';
-import { AzureServiceBusApiRef } from '../../api';
 import { PipelineParams } from '../../types';
+import { useAzureServiceBusApi } from '../../hooks/useAzureServiceBusApi';
 
 export const AzureServiceBusContent = () => {
   const { entity } = useEntity();
@@ -17,9 +17,8 @@ export const AzureServiceBusContent = () => {
   const [selectedResource, setSelectedResource] = useState<{ resourceName: string; resourceType: string } | null>(null);
   const [alertOpen, setAlertOpen] = useState(false);
   const [alertMessage, setAlertMessage] = useState('');
-  const [loading, setLoading] = useState(false);
 
-  const azureServiceBusApi = useApi(AzureServiceBusApiRef);
+  const { loading, triggerPipeline } = useAzureServiceBusApi();
   const config = useApi(configApiRef);
 
   const pipilineUrl = config.getOptionalString('plugins.azureServiceBus.piplineUrl');
@@ -52,14 +51,12 @@ export const AzureServiceBusContent = () => {
   }
 
   const handleSubmit = async (data: PipelineParams) => {
-    setLoading(true);
     try {
-      await azureServiceBusApi.triggerPipeline(data);
+      await triggerPipeline(data);
       setAlertMessage('Pipeline disparado com sucesso!');
     } catch (error) {
       setAlertMessage(`Erro: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
     } finally {
-      setLoading(false);
       setAlertOpen(true);
       setModalOpen(false);
       setTimeout(() => setAlertOpen(false), 5000);
