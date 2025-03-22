@@ -10,6 +10,7 @@ import ReprocessForm from './components/ReprocessForm';
 import { useApi, configApiRef } from '@backstage/core-plugin-api';
 import { PipelineParams } from '../../types';
 import { useAzureServiceBusApi } from '../../hooks/useAzureServiceBusApi';
+import BuildLogs from './components/BuildLogs';
 
 export const AzureServiceBusContent = () => {
   const { entity } = useEntity();
@@ -64,11 +65,11 @@ export const AzureServiceBusContent = () => {
   };
 
   return (
-    <Page themeId="tool">
+    <Page themeId="tool" >
       <Header title="Azure Service Bus" subtitle="Plugin para visualização de filas e tópicos do Azure Service Bus" />
       <Content>
-        <Grid container spacing={3}>
-          <Grid item xs={12}>
+        <Grid container spacing={3} >
+          <Grid item xs={6}>
             <InfoCard title="Filas e Tópicos">
               <TableContainer>
                 <Table>
@@ -99,6 +100,11 @@ export const AzureServiceBusContent = () => {
                   </TableBody>
                 </Table>
               </TableContainer>
+            </InfoCard>
+          </Grid>
+          <Grid item xs={6}>
+            <InfoCard title="Filas e Tópicos">
+              <BuildLogs />
             </InfoCard>
           </Grid>
         </Grid>
