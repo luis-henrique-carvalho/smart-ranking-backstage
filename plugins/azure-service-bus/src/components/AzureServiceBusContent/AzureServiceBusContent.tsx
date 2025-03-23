@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Grid, Button, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Typography, Snackbar, CircularProgress
 } from '@material-ui/core';
@@ -19,7 +19,13 @@ export const AzureServiceBusContent = () => {
   const [alertOpen, setAlertOpen] = useState(false);
   const [alertMessage, setAlertMessage] = useState('');
 
-  const { loading, triggerPipeline, pipelineRunId } = useAzureServiceBusApi();
+  const {
+    loading,
+    triggerPipeline,
+    buildLogsFull,
+    error,
+  } = useAzureServiceBusApi();
+
   const config = useApi(configApiRef);
 
   const pipilineUrl = config.getOptionalString('plugins.azureServiceBus.pipelineUrl');
@@ -55,8 +61,8 @@ export const AzureServiceBusContent = () => {
     try {
       await triggerPipeline(data);
       setAlertMessage('Pipeline disparado com sucesso!');
-    } catch (error) {
-      setAlertMessage(`Erro: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
+    } catch (err) {
+      setAlertMessage(`Erro: ${err instanceof Error ? err.message : 'Erro desconhecido'}`);
     } finally {
       setAlertOpen(true);
       setModalOpen(false);
@@ -103,10 +109,11 @@ export const AzureServiceBusContent = () => {
             </InfoCard>
           </Grid>
           <Grid item xs={6}>
-            <InfoCard title="Filas e Tópicos">
-              <BuildLogs pipelineRunId={pipelineRunId} />
-
-
+            <InfoCard title="Logs da Pipeline">
+              {buildLogsFull && <BuildLogs
+                loading={loading}
+                buildLogsFull={buildLogsFull}
+              />}
             </InfoCard>
           </Grid>
         </Grid>

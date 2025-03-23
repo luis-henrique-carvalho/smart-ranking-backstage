@@ -1,57 +1,41 @@
 import React, { useEffect, useRef } from "react";
-import { useAzureServiceBusApi } from "../../../hooks/useAzureServiceBusApi";
 import { CardContent, Typography } from "@material-ui/core";
 import { LogViewer, Progress } from "@backstage/core-components";
+import { BuildLogFull } from "../../../types";
 
+interface BuildLogsProps {
+    loading: boolean;
+    buildLogsFull: BuildLogFull[] | null;
+}
 
-const BuildLogs = ({ pipelineRunId }: { pipelineRunId: number | null }) => {
-
-    const { fetchBuildLogs, build, fetchBuildLogsById, loading, error, buildLogs, buildLogsFull } = useAzureServiceBusApi();
-
+const BuildLogs: React.FC<BuildLogsProps> = ({ loading, buildLogsFull }) => {
     const scrollRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
-        if (!pipelineRunId) return;
-
-        console.log("pipelineRunId atualizado:", pipelineRunId);
-
-        const loadLogs = async () => {
-            await fetchBuildLogs(pipelineRunId);
-            await Promise.all(
-                buildLogs ? buildLogs.map(async (log) => fetchBuildLogsById(log.id)) : []
-            );
-        };
-
-        loadLogs();
-    }, [pipelineRunId]); // Agora o efeito só roda quando pipelineRunId muda
-
-    // useEffect(() => {
-    //     if (scrollRef.current) {
-    //         scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-    //     }
-    // }, [buildLogsFull]);
+        if (scrollRef.current) {
+            setTimeout(() => {
+                console.log("🚀 Scrolling to bottom");
+                scrollRef.current!.scrollTop = scrollRef.current!.scrollHeight;
+            }, 1000); // Pequeno atraso para garantir que o conteúdo foi renderizado
+        }
+    }, [buildLogsFull]);
 
     if (loading) return <Progress />;
-    if (error) return <Typography color="error">{error.message || String(error)}</Typography>;
+    if (!buildLogsFull || buildLogsFull.length === 0) {
+        return <Typography color="textSecondary">Nenhum log disponível</Typography>;
+    }
 
     return (
-        <CardContent
-            ref={scrollRef}
-            style={{
-                maxHeight: "100vh",
-                overflowY: "auto",
-                display: "flex",
-                flexDirection: "column-reverse",
-            }}
-        >
-            {buildLogsFull && buildLogsFull.length > 0 ? (
-
-                <div style={{ height: "50vh", overflowY: "auto" }}>
-                    <LogViewer text={buildLogsFull.map((log) => log.value.map((value) => value).join("\n")).join("\n")} />
-                </div>
-            ) : (
-                <Typography color="textSecondary">Nenhum log disponível</Typography>
-            )}
+        <CardContent>
+            <div
+                ref={scrollRef}
+                style={{
+                    height: "60vh",
+                    overflowY: "auto",
+                }}
+            >
+                <LogViewer text={buildLogsFull.map(log => log.value.join("\n")).join("\n")} />
+            </div>
         </CardContent>
     );
 };

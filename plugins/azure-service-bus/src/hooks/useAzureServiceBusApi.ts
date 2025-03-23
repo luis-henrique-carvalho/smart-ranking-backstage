@@ -1,110 +1,121 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useApi } from '@backstage/core-plugin-api';
 import { AzureServiceBusApiRef } from '../api';
 import { Build, BuildLog, BuildLogFull, PipelineParams } from '../types';
 
 export interface UseAzureServiceBusApiReturn {
   loading: boolean;
-  setLoading: (loading: boolean) => void;
-  error: Error | null;
   pipelineRunId: number | null;
   build: Build | null;
   buildLogs: BuildLog[] | null;
   buildLogsFull: BuildLogFull[] | null;
   triggerPipeline: (data: PipelineParams) => Promise<void>;
-  fetchBuildById: (buildId: number) => Promise<void>;
-  fetchBuildLogs: (buildId: number) => Promise<void>;
-  fetchBuildLogsById: (logId: number) => Promise<void>;
 }
 
 export const useAzureServiceBusApi = (): UseAzureServiceBusApiReturn => {
-  const [loading, setLoading] = useState<boolean>(false);
-  const [error, setError] = useState<Error | null>(null);
+  const [loading, setLoading] = useState(false);
   const [pipelineRunId, setPipelineRunId] = useState<number | null>(null);
   const [build, setBuild] = useState<Build | null>(null);
-  const [buildLogs, setBuildLogs] = useState<BuildLog[] | null>(null);
-  const [buildLogsFull, setBuildLogsFull] = useState<BuildLogFull[] | null>(
-    null,
-  );
+  const [buildLogs, setBuildLogs] = useState<BuildLog[]>([]);
+  const [buildLogsFull, setBuildLogsFull] = useState<BuildLogFull[]>([]);
+  const logsRef = useRef(new Set<number>()); // Armazena logs já processados
   const azureServiceBusApi = useApi(AzureServiceBusApiRef);
 
   const triggerPipeline = async (data: PipelineParams): Promise<void> => {
     setLoading(true);
-    setError(null);
-
     try {
       const response = await azureServiceBusApi.triggerPipeline(data);
-
-      console.log('Novo pipelineRunId:', response.id); // Verifica o valor recebido
       setPipelineRunId(response.id);
       setBuild(response);
+      setBuildLogs([]);
+      setBuildLogsFull([]);
+      logsRef.current.clear();
     } catch (err) {
-      setError(err instanceof Error ? err : new Error('Erro desconhecido'));
+      console.error('Erro ao iniciar pipeline:', err);
     } finally {
       setLoading(false);
     }
   };
 
-  const fetchBuildLogs = async (buildId: number): Promise<any | null> => {
-    setLoading(true);
-    setError(null);
+  // Polling para buscar logs e status do build
+  useEffect(() => {
+    if (!pipelineRunId) return;
+    console.log(
+      '🚀 Iniciando polling para logs e status do build:',
+      pipelineRunId,
+    );
 
-    try {
-      const logs = await azureServiceBusApi.fetchBuildLogs(buildId);
+    const fetchLogs = async () => {
+      try {
+        // Atualiza os logs
+        const logs = await azureServiceBusApi.fetchBuildLogs(pipelineRunId);
+        console.log('📜 Logs obtidos:', logs);
 
-      setBuildLogs(logs.value);
-    } catch (err) {
-      setError(err instanceof Error ? err : new Error('Erro desconhecido'));
-    } finally {
-      setLoading(false);
-    }
-  };
+        if (logs?.value?.length) {
+          setBuildLogs(logs.value);
+        }
 
-  const fetchBuildById = async (buildId: number): Promise<void> => {
-    setLoading(true);
-    setError(null);
+        // Atualiza o status do build
+        const buildStatus = await azureServiceBusApi.fetchBuildById(
+          pipelineRunId,
+        );
+        console.log('🔄 Status do Build:', buildStatus.status);
+        setBuild(buildStatus);
 
-    try {
-      const response = await azureServiceBusApi.fetchBuildById(buildId);
+        // Para o polling se o build estiver completo
+        if (buildStatus.status === 'completed') {
+          console.log('✅ Build finalizado, parando polling.');
+          clearInterval(logPolling);
+        }
+      } catch (err) {
+        console.error('❌ Erro ao buscar logs/status:', err);
+      }
+    };
 
-      setBuild(response);
-    } catch (err) {
-      setError(err instanceof Error ? err : new Error('Erro desconhecido'));
-    } finally {
-      setLoading(false);
-    }
-  };
+    // Polling a cada 5 segundos
+    const logPolling = setInterval(fetchLogs, 5000);
+    fetchLogs(); // Chamada inicial
 
-  const fetchBuildLogsById = async (logId: number): Promise<void> => {
-    setLoading(true);
-    setError(null);
+    return () => clearInterval(logPolling); // Limpeza ao desmontar
+  }, [pipelineRunId]);
 
-    if (!pipelineRunId) {
-      return;
-    }
+  // Buscar detalhes dos logs apenas quando `buildLogs` mudar
+  useEffect(() => {
+    if (!buildLogs.length) return;
+    console.log('📌 Buscando detalhes dos logs:', buildLogs);
 
-    try {
-      const log = await azureServiceBusApi.fetchLogById(logId, pipelineRunId);
+    const fetchLogDetails = async () => {
+      try {
+        const logsDetalhados = await Promise.all(
+          buildLogs.map(async log => {
+            if (!logsRef.current.has(log.id)) {
+              logsRef.current.add(log.id);
+              return azureServiceBusApi.fetchLogById(log.id, pipelineRunId!);
+            }
+            return null;
+          }),
+        );
 
-      setBuildLogsFull(prev => (prev ? [...prev, log] : [log]));
-    } catch (err) {
-      setError(err instanceof Error ? err : new Error('Erro desconhecido'));
-    } finally {
-      setLoading(false);
-    }
-  };
+        const filteredLogs = logsDetalhados.filter(
+          log => log !== null,
+        ) as BuildLogFull[];
+        if (filteredLogs.length > 0) {
+          setBuildLogsFull(prev => [...prev, ...filteredLogs]);
+        }
+      } catch (err) {
+        console.error('❌ Erro ao buscar detalhes dos logs:', err);
+      }
+    };
+
+    fetchLogDetails();
+  }, [buildLogs]);
 
   return {
     loading,
-    fetchBuildById,
-    setLoading,
+    pipelineRunId,
     build,
     buildLogs,
     buildLogsFull,
-    error,
-    pipelineRunId,
     triggerPipeline,
-    fetchBuildLogs,
-    fetchBuildLogsById,
   };
 };
