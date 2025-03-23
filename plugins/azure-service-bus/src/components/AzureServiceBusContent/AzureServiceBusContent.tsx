@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
-  Grid, Button, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Typography, Snackbar, CircularProgress
+  Grid, Button, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Typography, Snackbar, CircularProgress,
+  Link
 } from '@material-ui/core';
 import { Alert } from '@material-ui/lab';
 import { InfoCard, Header, Page, Content } from '@backstage/core-components';
@@ -9,7 +10,7 @@ import ReprocessModal from './components/ReprocessModal';
 import ReprocessForm from './components/ReprocessForm';
 import { useApi, configApiRef } from '@backstage/core-plugin-api';
 import { PipelineParams } from '../../types';
-import { useAzureServiceBusApi } from '../../hooks/useAzureServiceBusApi';
+import { useAzurePipelineRunner } from '../../hooks/useAzurePipelineRunner';
 import BuildLogs from './components/BuildLogs';
 
 export const AzureServiceBusContent = () => {
@@ -23,7 +24,9 @@ export const AzureServiceBusContent = () => {
     loading,
     triggerPipeline,
     buildLogsDetails,
-  } = useAzureServiceBusApi();
+    buildInProgress,
+    build
+  } = useAzurePipelineRunner();
 
   const config = useApi(configApiRef);
 
@@ -69,6 +72,27 @@ export const AzureServiceBusContent = () => {
     }
   };
 
+  const renderActionButton = (row: { resourceName: string, resourceType: string }) => {
+    if (buildInProgress) {
+      return selectedResource?.resourceName === row.resourceName ? (
+        <Typography color="secondary">{build?.status}</Typography>
+      ) : (
+        <CircularProgress size={24} />
+      );
+    }
+
+    return (
+      <Button
+        variant="contained"
+        color="primary"
+        onClick={() => handleOpenModal(row)}
+        disabled={loading}
+      >
+        {loading ? <CircularProgress size={24} /> : 'Run Pipeline'}
+      </Button>
+    );
+  };
+
   return (
     <Page themeId="tool" >
       <Header title="Azure Service Bus" subtitle="Plugin para visualização de filas e tópicos do Azure Service Bus" />
@@ -91,14 +115,7 @@ export const AzureServiceBusContent = () => {
                         <TableCell>{row.resourceName}</TableCell>
                         <TableCell>{row.resourceType}</TableCell>
                         <TableCell>
-                          <Button
-                            variant="contained"
-                            color="primary"
-                            onClick={() => handleOpenModal(row)}
-                            disabled={loading}
-                          >
-                            {loading ? <CircularProgress size={24} /> : 'Reifileirar Dead Letter'}
-                          </Button>
+                          <TableCell>{renderActionButton(row)}</TableCell>
                         </TableCell>
                       </TableRow>
                     ))}
@@ -108,11 +125,26 @@ export const AzureServiceBusContent = () => {
             </InfoCard>
           </Grid>
           <Grid item xs={6}>
-            <InfoCard title="Logs da Pipeline">
-              {buildLogsDetails && <BuildLogs
-                loading={loading}
-                buildLogsDetails={buildLogsDetails}
-              />}
+            <InfoCard title={
+              build ? (
+                <Grid container justifyContent="space-between" alignItems="center">
+                  <Grid item>
+                    <Link href={build._links.web.href} target="_blank" rel="noreferrer">
+                      Logs do Build #{build.buildNumber}
+                    </Link>
+                  </Grid>
+                  <Grid item>
+                    <Typography variant="h6" align="right">{build.status}</Typography>
+                  </Grid>
+                </Grid>
+              ) : 'Logs do Build'
+            }>
+              {buildLogsDetails && (
+                <BuildLogs
+                  loading={loading}
+                  buildLogsDetails={buildLogsDetails}
+                />
+              )}
             </InfoCard>
           </Grid>
         </Grid>

@@ -22,6 +22,12 @@ export interface BuildLogsResponse {
 export interface Build {
   id: number;
   status: string;
+  buildNumber: string;
+  _links: {
+    web: {
+      href: string;
+    };
+  };
 }
 
 export interface BuildLogFull {
