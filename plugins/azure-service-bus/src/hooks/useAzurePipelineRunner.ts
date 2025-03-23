@@ -15,6 +15,7 @@ export interface useAzurePipelineRunnerReturn {
   buildInProgress: boolean;
   setError: (error: string | null) => void;
   triggerPipeline: (data: PipelineParams) => Promise<void>;
+  resetState: () => void;
 }
 
 export const useAzurePipelineRunner = (): useAzurePipelineRunnerReturn => {
@@ -46,6 +47,15 @@ export const useAzurePipelineRunner = (): useAzurePipelineRunnerReturn => {
     }
   };
 
+  const resetState = () => {
+    setExecutionId(null);
+    setBuild(null);
+    setBuildLogs([]);
+    setBuildLogsDetails([]);
+    setBuildInProgress(false);
+    logsRef.current.clear();
+  };
+
   useEffect(() => {
     if (!executionId) return;
 
@@ -63,7 +73,6 @@ export const useAzurePipelineRunner = (): useAzurePipelineRunnerReturn => {
           if (logs?.value?.length) {
             setBuildLogs(logs.value);
 
-            // 3. Buscar detalhes dos logs (apenas para novos logs)
             const logsDetalhados = await Promise.all(
               logs.value.map(async log => {
                 if (!logsRef.current.has(log.id)) {
@@ -111,5 +120,6 @@ export const useAzurePipelineRunner = (): useAzurePipelineRunnerReturn => {
     error,
     setError,
     triggerPipeline,
+    resetState,
   };
 };

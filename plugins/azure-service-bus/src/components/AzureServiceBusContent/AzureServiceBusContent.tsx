@@ -25,7 +25,8 @@ export const AzureServiceBusContent = () => {
     triggerPipeline,
     buildLogsDetails,
     buildInProgress,
-    build
+    build,
+    resetState
   } = useAzurePipelineRunner();
 
   const config = useApi(configApiRef);
@@ -134,7 +135,11 @@ export const AzureServiceBusContent = () => {
                     </Link>
                   </Grid>
                   <Grid item>
-                    <Typography variant="h6" align="right">{build.status}</Typography>
+                    {build.status === 'completed' ? (
+                      <Button variant="contained" color="primary" onClick={resetState}>
+                        Limpar
+                      </Button>
+                    ) : null}
                   </Grid>
                 </Grid>
               ) : 'Logs do Build'
