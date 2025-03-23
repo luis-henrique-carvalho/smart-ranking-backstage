@@ -146,5 +146,5 @@ permission:
   enabled: true
 plugins:
   azureServiceBus:
-    piplineUrl: ${AZURE_SERVICE_BUS_PIPELINE_URL}
-    piplineToken: ${AZURE_TOKEN}
+    pipelineUrl: ${AZURE_SERVICE_BUS_PIPELINE_URL}
+    pipelineToken: ${AZURE_TOKEN}

@@ -8,11 +8,11 @@ export interface Config {
       /**
        * @visibility frontend
        */
-      piplineUrl: string;
+      pipelineUrl: string;
       /**
        * @visibility frontend
        */
-      piplineToken: string;
+      pipelineToken: string;
     };
   };
 }

@@ -19,13 +19,13 @@ export const AzureServiceBusContent = () => {
   const [alertOpen, setAlertOpen] = useState(false);
   const [alertMessage, setAlertMessage] = useState('');
 
-  const { loading, triggerPipeline } = useAzureServiceBusApi();
+  const { loading, triggerPipeline, pipelineRunId } = useAzureServiceBusApi();
   const config = useApi(configApiRef);
 
-  const pipilineUrl = config.getOptionalString('plugins.azureServiceBus.piplineUrl');
+  const pipilineUrl = config.getOptionalString('plugins.azureServiceBus.pipelineUrl');
 
   if (!pipilineUrl) {
-    throw new Error('Configuração "plugins.azureServiceBus.piplineUrl" ausente no app-config.yaml');
+    throw new Error('Configuração "plugins.azureServiceBus.pipelineUrl" ausente no app-config.yaml');
   }
 
   const serviceName = entity.metadata.name;
@@ -104,7 +104,9 @@ export const AzureServiceBusContent = () => {
           </Grid>
           <Grid item xs={6}>
             <InfoCard title="Filas e Tópicos">
-              <BuildLogs />
+              <BuildLogs pipelineRunId={pipelineRunId} />
+
+
             </InfoCard>
           </Grid>
         </Grid>

@@ -1,60 +1,38 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useRef } from "react";
 import { useAzureServiceBusApi } from "../../../hooks/useAzureServiceBusApi";
-import { CardContent, Typography, CircularProgress } from "@material-ui/core";
+import { CardContent, Typography } from "@material-ui/core";
 import { LogViewer, Progress } from "@backstage/core-components";
 
-interface BuildLog {
-    id: number;
-    type: string;
-}
 
-interface LogValues {
-    value: string[];
-}
+const BuildLogs = ({ pipelineRunId }: { pipelineRunId: number | null }) => {
 
-const BuildLogs = () => {
-    const { fetchBuildLogs, pipelineRunId, fetchBuildLogsById, loading, setLoading, build, fetchBuildById } = useAzureServiceBusApi();
-    const [logs, setLogs] = useState<BuildLog[] | null>(null);
-    const [logsValues, setLogsValues] = useState<LogValues[] | null>(null);
-    const [error, setError] = useState<string | null>(null);
+    const { fetchBuildLogs, build, fetchBuildLogsById, loading, error, buildLogs, buildLogsFull } = useAzureServiceBusApi();
+
     const scrollRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
-
         if (!pipelineRunId) return;
 
+        console.log("pipelineRunId atualizado:", pipelineRunId);
+
         const loadLogs = async () => {
-            if (!build) return;
-            if (build.status !== "completed") return;
-
-            try {
-                setLoading(true);
-                const logsData = await fetchBuildLogs(pipelineRunId);
-                const fetchedLogsValues = await Promise.all(
-                    logsData?.value.map(async (log: BuildLog) => fetchBuildLogsById(log.id))
-                );
-
-                setLogs(logsData?.value || []);
-                setLogsValues(fetchedLogsValues);
-            } catch (err: any) {
-                setError(err.message || "Erro ao carregar logs");
-            } finally {
-                setLoading(false);
-            }
+            await fetchBuildLogs(pipelineRunId);
+            await Promise.all(
+                buildLogs ? buildLogs.map(async (log) => fetchBuildLogsById(log.id)) : []
+            );
         };
 
-        fetchBuildById(pipelineRunId);
         loadLogs();
-    }, [pipelineRunId]);
+    }, [pipelineRunId]); // Agora o efeito só roda quando pipelineRunId muda
 
-    useEffect(() => {
-        if (scrollRef.current) {
-            scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-        }
-    }, [logsValues]);
+    // useEffect(() => {
+    //     if (scrollRef.current) {
+    //         scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    //     }
+    // }, [buildLogsFull]);
 
     if (loading) return <Progress />;
-    if (error) return <Typography color="error">{error}</Typography>;
+    if (error) return <Typography color="error">{error.message || String(error)}</Typography>;
 
     return (
         <CardContent
@@ -66,10 +44,10 @@ const BuildLogs = () => {
                 flexDirection: "column-reverse",
             }}
         >
-            {logsValues && logsValues.length > 0 ? (
+            {buildLogsFull && buildLogsFull.length > 0 ? (
 
                 <div style={{ height: "50vh", overflowY: "auto" }}>
-                    <LogViewer text={logsValues.map((log) => log.value.map((value) => value).join("\n")).join("\n")} />
+                    <LogViewer text={buildLogsFull.map((log) => log.value.map((value) => value).join("\n")).join("\n")} />
                 </div>
             ) : (
                 <Typography color="textSecondary">Nenhum log disponível</Typography>
