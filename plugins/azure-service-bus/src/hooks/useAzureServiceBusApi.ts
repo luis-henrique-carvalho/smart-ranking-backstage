@@ -37,25 +37,13 @@ export const useAzureServiceBusApi = (): UseAzureServiceBusApiReturn => {
     }
   };
 
-  // Polling para buscar logs e status do build
+  // Polling para buscar status do build
   useEffect(() => {
     if (!pipelineRunId) return;
-    console.log(
-      '🚀 Iniciando polling para logs e status do build:',
-      pipelineRunId,
-    );
+    console.log('🚀 Iniciando polling para status do build:', pipelineRunId);
 
-    const fetchLogs = async () => {
+    const fetchBuildStatus = async () => {
       try {
-        // Atualiza os logs
-        const logs = await azureServiceBusApi.fetchBuildLogs(pipelineRunId);
-        console.log('📜 Logs obtidos:', logs);
-
-        if (logs?.value?.length) {
-          setBuildLogs(logs.value);
-        }
-
-        // Atualiza o status do build
         const buildStatus = await azureServiceBusApi.fetchBuildById(
           pipelineRunId,
         );
@@ -65,19 +53,44 @@ export const useAzureServiceBusApi = (): UseAzureServiceBusApiReturn => {
         // Para o polling se o build estiver completo
         if (buildStatus.status === 'completed') {
           console.log('✅ Build finalizado, parando polling.');
-          clearInterval(logPolling);
+          clearInterval(statusPolling);
         }
       } catch (err) {
-        console.error('❌ Erro ao buscar logs/status:', err);
+        console.error('❌ Erro ao buscar status do build:', err);
       }
     };
 
-    // Polling a cada 5 segundos
+    // Polling para status do build a cada 5 segundos
+    const statusPolling = setInterval(fetchBuildStatus, 5000);
+    fetchBuildStatus(); // Chamada inicial
+
+    return () => clearInterval(statusPolling); // Limpeza ao desmontar
+  }, [pipelineRunId]);
+
+  // Polling para buscar logs SOMENTE se o build estiver em execução
+  useEffect(() => {
+    if (!pipelineRunId || !build || build.status !== 'inProgress') return;
+    console.log('📜 Iniciando polling para logs...');
+
+    const fetchLogs = async () => {
+      try {
+        const logs = await azureServiceBusApi.fetchBuildLogs(pipelineRunId);
+        console.log('📜 Logs obtidos:', logs);
+
+        if (logs?.value?.length) {
+          setBuildLogs(logs.value);
+        }
+      } catch (err) {
+        console.error('❌ Erro ao buscar logs:', err);
+      }
+    };
+
+    // Polling para logs a cada 5 segundos
     const logPolling = setInterval(fetchLogs, 5000);
     fetchLogs(); // Chamada inicial
 
     return () => clearInterval(logPolling); // Limpeza ao desmontar
-  }, [pipelineRunId]);
+  }, [pipelineRunId, build]); // 🚀 Executa sempre que o `build.status` mudar
 
   // Buscar detalhes dos logs apenas quando `buildLogs` mudar
   useEffect(() => {
