@@ -5,23 +5,22 @@ import { BuildLogFull } from "../../../types";
 
 interface BuildLogsProps {
     loading: boolean;
-    buildLogsFull: BuildLogFull[] | null;
+    buildLogsDetails: BuildLogFull[] | null;
 }
 
-const BuildLogs: React.FC<BuildLogsProps> = ({ loading, buildLogsFull }) => {
+const BuildLogs: React.FC<BuildLogsProps> = ({ loading, buildLogsDetails }) => {
     const scrollRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
         if (scrollRef.current) {
             setTimeout(() => {
-                console.log("🚀 Scrolling to bottom");
                 scrollRef.current!.scrollTop = scrollRef.current!.scrollHeight;
             }, 1000); // Pequeno atraso para garantir que o conteúdo foi renderizado
         }
-    }, [buildLogsFull]);
+    }, [buildLogsDetails]);
 
     if (loading) return <Progress />;
-    if (!buildLogsFull || buildLogsFull.length === 0) {
+    if (!buildLogsDetails || buildLogsDetails.length === 0) {
         return <Typography color="textSecondary">Nenhum log disponível</Typography>;
     }
 
@@ -34,7 +33,7 @@ const BuildLogs: React.FC<BuildLogsProps> = ({ loading, buildLogsFull }) => {
                     overflowY: "auto",
                 }}
             >
-                <LogViewer text={buildLogsFull.map(log => log.value.join("\n")).join("\n")} />
+                <LogViewer text={buildLogsDetails.map(log => log.value.join("\n")).join("\n")} />
             </div>
         </CardContent>
     );

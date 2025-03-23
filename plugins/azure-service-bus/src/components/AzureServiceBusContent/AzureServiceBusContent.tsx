@@ -22,8 +22,7 @@ export const AzureServiceBusContent = () => {
   const {
     loading,
     triggerPipeline,
-    buildLogsFull,
-    error,
+    buildLogsDetails,
   } = useAzureServiceBusApi();
 
   const config = useApi(configApiRef);
@@ -110,9 +109,9 @@ export const AzureServiceBusContent = () => {
           </Grid>
           <Grid item xs={6}>
             <InfoCard title="Logs da Pipeline">
-              {buildLogsFull && <BuildLogs
+              {buildLogsDetails && <BuildLogs
                 loading={loading}
-                buildLogsFull={buildLogsFull}
+                buildLogsDetails={buildLogsDetails}
               />}
             </InfoCard>
           </Grid>
