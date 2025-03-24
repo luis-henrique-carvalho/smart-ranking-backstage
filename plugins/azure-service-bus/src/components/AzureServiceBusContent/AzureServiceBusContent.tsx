@@ -1,17 +1,15 @@
 import React, { useState } from 'react';
-import {
-  Grid, Button, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Typography, Snackbar, CircularProgress,
-  Link
-} from '@material-ui/core';
-import { Alert } from '@material-ui/lab';
-import { InfoCard, Header, Page, Content } from '@backstage/core-components';
+import { Button, CircularProgress, Grid, Link, Snackbar, Typography } from '@material-ui/core';
+import { InfoCard, Page, Content } from '@backstage/core-components';
 import { useEntity, MissingAnnotationEmptyState } from '@backstage/plugin-catalog-react';
-import ReprocessModal from './components/ReprocessModal';
-import ReprocessForm from './components/ReprocessForm';
 import { useApi, configApiRef } from '@backstage/core-plugin-api';
 import { PipelineParams } from '../../types';
 import { useAzurePipelineRunner } from '../../hooks/useAzurePipelineRunner';
+import { ResourceTable } from './components/ResourceTable';
+import ReprocessModal from './components/ReprocessModal';
+import ReprocessForm from './components/ReprocessForm';
 import BuildLogs from './components/BuildLogs';
+import { Alert } from '@material-ui/lab';
 
 export const AzureServiceBusContent = () => {
   const { entity } = useEntity();
@@ -26,11 +24,10 @@ export const AzureServiceBusContent = () => {
     buildLogsDetails,
     buildInProgress,
     build,
-    resetState
+    resetState,
   } = useAzurePipelineRunner();
 
   const config = useApi(configApiRef);
-
   const pipilineUrl = config.getOptionalString('plugins.azureServiceBus.pipelineUrl');
 
   if (!pipilineUrl) {
@@ -41,13 +38,13 @@ export const AzureServiceBusContent = () => {
   const queueNames = entity.metadata.annotations?.['azure-service-bus/queues'];
   const topicsNames = entity.metadata.annotations?.['azure-service-bus/topics'];
 
-  if (!queueNames || !topicsNames) {
+  if (!queueNames && !topicsNames) {
     return <MissingAnnotationEmptyState annotation={['azure-service-bus/queues', 'azure-service-bus/topics']} />;
   }
 
   const combinedData: { resourceName: string, resourceType: "queue" | "topic" }[] = [
-    ...queueNames.split(',').map(resourceName => ({ resourceName, resourceType: 'queue' as const })),
-    ...topicsNames.split(',').map(resourceName => ({ resourceName, resourceType: 'topic' as const }))
+    ...(queueNames ? queueNames.split(',').map(resourceName => ({ resourceName, resourceType: 'queue' as const })) : []),
+    ...(topicsNames ? topicsNames.split(',').map(resourceName => ({ resourceName, resourceType: 'topic' as const })) : []),
   ];
 
   const handleOpenModal = (resource: { resourceName: string; resourceType: string }) => {
@@ -58,7 +55,7 @@ export const AzureServiceBusContent = () => {
   const handleCloseModal = () => {
     setSelectedResource(null);
     setModalOpen(false);
-  }
+  };
 
   const handleSubmit = async (data: PipelineParams) => {
     try {
@@ -95,59 +92,34 @@ export const AzureServiceBusContent = () => {
   };
 
   return (
-    <Page themeId="tool" >
+    <Page themeId="tool">
       <Content>
-        <Grid container spacing={3} >
+        <Grid container spacing={3}>
           <Grid item xs={6}>
-            <InfoCard title="Filas e Tópicos">
-              <TableContainer>
-                <Table>
-                  <TableHead>
-                    <TableRow>
-                      <TableCell><Typography variant="h6">Nome</Typography></TableCell>
-                      <TableCell><Typography variant="h6">Tipo</Typography></TableCell>
-                      <TableCell><Typography variant="h6">Ação</Typography></TableCell>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {combinedData.map((row, index) => (
-                      <TableRow key={index}>
-                        <TableCell>{row.resourceName}</TableCell>
-                        <TableCell>{row.resourceType}</TableCell>
-                        <TableCell>
-                          <TableCell>{renderActionButton(row)}</TableCell>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </TableContainer>
-            </InfoCard>
+            <ResourceTable combinedData={combinedData} renderActionButton={renderActionButton} />
           </Grid>
           <Grid item xs={6}>
-            <InfoCard title={
-              build ? (
-                <Grid container justifyContent="space-between" alignItems="center">
-                  <Grid item>
-                    <Link href={build._links.web.href} target="_blank" rel="noreferrer">
-                      Logs do Build #{build.buildNumber}
-                    </Link>
+            <InfoCard
+              title={
+                build ? (
+                  <Grid container justifyContent="space-between" alignItems="center">
+                    <Grid item>
+                      <Link href={build._links.web.href} target="_blank" rel="noreferrer">
+                        Logs do Build #{build.buildNumber}
+                      </Link>
+                    </Grid>
+                    <Grid item>
+                      {build.status === 'completed' ? (
+                        <Button variant="contained" color="primary" onClick={resetState}>
+                          Limpar
+                        </Button>
+                      ) : null}
+                    </Grid>
                   </Grid>
-                  <Grid item>
-                    {build.status === 'completed' ? (
-                      <Button variant="contained" color="primary" onClick={resetState}>
-                        Limpar
-                      </Button>
-                    ) : null}
-                  </Grid>
-                </Grid>
-              ) : 'Logs do Build'
-            }>
-              {buildLogsDetails && (
-                <BuildLogs
-                  buildLogsDetails={buildLogsDetails}
-                />
-              )}
+                ) : 'Logs do Build'
+              }
+            >
+              {buildLogsDetails && <BuildLogs buildLogsDetails={buildLogsDetails} />}
             </InfoCard>
           </Grid>
         </Grid>
