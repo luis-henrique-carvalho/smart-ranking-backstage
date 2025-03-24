@@ -96,7 +96,6 @@ export const AzureServiceBusContent = () => {
 
   return (
     <Page themeId="tool" >
-      <Header title="Azure Service Bus" subtitle="Plugin para visualização de filas e tópicos do Azure Service Bus" />
       <Content>
         <Grid container spacing={3} >
           <Grid item xs={6}>
@@ -146,7 +145,6 @@ export const AzureServiceBusContent = () => {
             }>
               {buildLogsDetails && (
                 <BuildLogs
-                  loading={loading}
                   buildLogsDetails={buildLogsDetails}
                 />
               )}
