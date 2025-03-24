@@ -22,9 +22,12 @@ export const AzureServiceBusContent = () => {
     loading,
     triggerPipeline,
     buildLogsDetails,
-    buildInProgress,
     build,
     resetState,
+    queueManagerState,
+    setLastBuildId,
+    startRunning,
+    completeRun,
   } = useAzurePipelineRunner();
 
   const config = useApi(configApiRef);
@@ -66,16 +69,47 @@ export const AzureServiceBusContent = () => {
     } finally {
       setAlertOpen(true);
       setModalOpen(false);
-      setTimeout(() => setAlertOpen(false), 5000);
     }
   };
 
   const renderActionButton = (row: { resourceName: string, resourceType: string }) => {
-    if (buildInProgress) {
-      return selectedResource?.resourceName === row.resourceName ? (
-        <Typography color="secondary">{build?.status}</Typography>
-      ) : (
-        <CircularProgress size={24} />
+    const currentResource = queueManagerState.find(q => q.resourceName === row.resourceName);
+    const position = queueManagerState.findIndex(q => q.resourceName === row.resourceName) + 1;
+    const totalInQueue = queueManagerState.filter(q => q.status !== 'completed').length;
+
+    if (currentResource) {
+      return (
+        <Grid container spacing={1} alignItems="center">
+          {currentResource.status === 'running' && (
+            <Grid item>
+              <CircularProgress size={20} />
+            </Grid>
+          )}
+          <Grid item>
+            <Button
+              variant="contained"
+              color={currentResource.status === 'running' ? 'secondary' : 'primary'}
+              onClick={() => {
+                if (currentResource.status === 'running') {
+                  setLastBuildId(currentResource.buildId);
+                } else if (currentResource.status === 'queued') {
+                  // Opção para cancelar se necessário
+                }
+              }}
+              disabled={currentResource.status === 'queued'}
+            >
+              {currentResource.status === 'running' ? 'Acompanhar' : 'Na fila'}
+            </Button>
+            <Typography variant="caption" display="block">
+              Posição: {position} de {totalInQueue}
+            </Typography>
+            {currentResource.status === 'running' && (
+              <Typography variant="caption" display="block" color="textSecondary">
+                Em execução
+              </Typography>
+            )}
+          </Grid>
+        </Grid>
       );
     }
 
@@ -86,7 +120,7 @@ export const AzureServiceBusContent = () => {
         onClick={() => handleOpenModal(row)}
         disabled={loading}
       >
-        {loading ? <CircularProgress size={24} /> : 'Run Pipeline'}
+        Executar
       </Button>
     );
   };
@@ -96,7 +130,10 @@ export const AzureServiceBusContent = () => {
       <Content>
         <Grid container spacing={3}>
           <Grid item xs={6}>
-            <ResourceTable combinedData={combinedData} renderActionButton={renderActionButton} />
+            <ResourceTable
+              combinedData={combinedData}
+              renderActionButton={renderActionButton}
+            />
           </Grid>
           <Grid item xs={6}>
             <InfoCard
@@ -136,8 +173,18 @@ export const AzureServiceBusContent = () => {
         </ReprocessModal>
       )}
 
-      <Snackbar open={alertOpen} autoHideDuration={6000} onClose={() => setAlertOpen(false)}>
-        <Alert severity={alertMessage.startsWith('Erro') ? 'error' : 'success'}>{alertMessage}</Alert>
+      <Snackbar
+        open={alertOpen}
+        autoHideDuration={6000}
+        onClose={() => setAlertOpen(false)}
+        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+      >
+        <Alert
+          severity={alertMessage.startsWith('Erro') ? 'error' : 'success'}
+          onClose={() => setAlertOpen(false)}
+        >
+          {alertMessage}
+        </Alert>
       </Snackbar>
     </Page>
   );
