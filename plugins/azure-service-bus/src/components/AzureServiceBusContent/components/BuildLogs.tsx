@@ -1,5 +1,5 @@
 import React from "react";
-import { Button, CardContent, Typography } from "@material-ui/core";
+import { Button, CardContent, Typography, makeStyles } from "@material-ui/core";
 import { LogViewer } from "@backstage/core-components";
 import { BuildLogFull } from "../../../types";
 import ArrowDownward from "@material-ui/icons/ArrowDownward"; // Importe o ícone
@@ -9,6 +9,15 @@ interface BuildLogsProps {
 }
 
 const BuildLogs: React.FC<BuildLogsProps> = ({ buildLogsDetails }) => {
+
+    const useStyles = makeStyles({
+        logViewerRoot: {
+            padding: '5px',
+        },
+    });
+
+    const classes = useStyles(); // Use os estilos
+
     const scrollToBottom = () => {
         const logViewerInnerDiv = document.querySelector(
             'div[class^="BackstageLogViewer-log-"]',
@@ -31,6 +40,9 @@ const BuildLogs: React.FC<BuildLogsProps> = ({ buildLogsDetails }) => {
             >
                 <LogViewer
                     text={buildLogsDetails.map((log) => log.value.join("\n")).join("\n")}
+                    classes={{
+                        root: classes.logViewerRoot,
+                    }}
                 />
 
                 {buildLogsDetails && (
