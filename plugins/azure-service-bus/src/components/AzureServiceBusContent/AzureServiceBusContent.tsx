@@ -1,6 +1,22 @@
 import React, { useState } from 'react';
-import { Button, CircularProgress, Grid, Link, Snackbar, Typography } from '@material-ui/core';
-import { InfoCard, Page, Content } from '@backstage/core-components';
+import {
+  Button,
+  CircularProgress,
+  Grid,
+  Link,
+  Snackbar,
+  Typography,
+  Chip,
+  IconButton,
+  Tooltip
+} from '@material-ui/core';
+import {
+  InfoCard,
+  Page,
+  Content,
+  WarningPanel,
+  Progress
+} from '@backstage/core-components';
 import { useEntity, MissingAnnotationEmptyState } from '@backstage/plugin-catalog-react';
 import { useApi, configApiRef } from '@backstage/core-plugin-api';
 import { PipelineParams } from '../../types';
@@ -10,31 +26,42 @@ import ReprocessModal from './components/ReprocessModal';
 import ReprocessForm from './components/ReprocessForm';
 import BuildLogs from './components/BuildLogs';
 import { Alert } from '@material-ui/lab';
+import HistoryIcon from '@material-ui/icons/History';
+import ClearAllIcon from '@material-ui/icons/ClearAll';
 
 export const AzureServiceBusContent = () => {
   const { entity } = useEntity();
   const [modalOpen, setModalOpen] = useState(false);
-  const [selectedResource, setSelectedResource] = useState<{ resourceName: string; resourceType: string } | null>(null);
+  const [selectedResource, setSelectedResource] = useState<{
+    resourceName: string;
+    resourceType: string
+  } | null>(null);
   const [alertOpen, setAlertOpen] = useState(false);
   const [alertMessage, setAlertMessage] = useState('');
 
   const {
     loading,
-    triggerPipeline,
-    buildLogsDetails,
+    activeBuildId,
     build,
-    resetState,
-    queueManagerState,
-    setLastBuildId,
-    startRunning,
-    completeRun,
+    buildLogsDetails,
+    buildsHistory,
+    triggerPipeline,
+    trackBuild,
+    clearBuild,
+    clearHistory,
+    error,
+    setError
   } = useAzurePipelineRunner();
 
   const config = useApi(configApiRef);
-  const pipilineUrl = config.getOptionalString('plugins.azureServiceBus.pipelineUrl');
+  const pipelineUrl = config.getOptionalString('plugins.azureServiceBus.pipelineUrl');
 
-  if (!pipilineUrl) {
-    throw new Error('Configuração "plugins.azureServiceBus.pipelineUrl" ausente no app-config.yaml');
+  if (!pipelineUrl) {
+    return (
+      <WarningPanel severity="error" title="Missing Configuration">
+        The Azure Service Bus pipeline URL is not configured in app-config.yaml
+      </WarningPanel>
+    );
   }
 
   const serviceName = entity.metadata.name;
@@ -42,12 +69,21 @@ export const AzureServiceBusContent = () => {
   const topicsNames = entity.metadata.annotations?.['azure-service-bus/topics'];
 
   if (!queueNames && !topicsNames) {
-    return <MissingAnnotationEmptyState annotation={['azure-service-bus/queues', 'azure-service-bus/topics']} />;
+    return (<MissingAnnotationEmptyState annotation={[
+      'azure-service-bus/queues',
+      'azure-service-bus/topics'
+    ]} />);
   }
 
-  const combinedData: { resourceName: string, resourceType: "queue" | "topic" }[] = [
-    ...(queueNames ? queueNames.split(',').map(resourceName => ({ resourceName, resourceType: 'queue' as const })) : []),
-    ...(topicsNames ? topicsNames.split(',').map(resourceName => ({ resourceName, resourceType: 'topic' as const })) : []),
+  const combinedData = [
+    ...(queueNames ? queueNames.split(',').map(name => ({
+      resourceName: name.trim(),
+      resourceType: 'queue' as const,
+    })) : []),
+    ...(topicsNames ? topicsNames.split(',').map(name => ({
+      resourceName: name.trim(),
+      resourceType: 'topic' as const,
+    })) : []),
   ];
 
   const handleOpenModal = (resource: { resourceName: string; resourceType: string }) => {
@@ -63,65 +99,54 @@ export const AzureServiceBusContent = () => {
   const handleSubmit = async (data: PipelineParams) => {
     try {
       await triggerPipeline(data);
-      setAlertMessage('Pipeline disparado com sucesso!');
+      setAlertMessage('Pipeline triggered successfully!');
     } catch (err) {
-      setAlertMessage(`Erro: ${err instanceof Error ? err.message : 'Erro desconhecido'}`);
+      setAlertMessage(`Error: ${err instanceof Error ? err.message : 'Unknown error'}`);
     } finally {
       setAlertOpen(true);
       setModalOpen(false);
     }
   };
 
-  const renderActionButton = (row: { resourceName: string, resourceType: string }) => {
-    const currentResource = queueManagerState.find(q => q.resourceName === row.resourceName);
-    const position = queueManagerState.findIndex(q => q.resourceName === row.resourceName) + 1;
-    const totalInQueue = queueManagerState.filter(q => q.status !== 'completed').length;
+  const renderActionButton = (row: { resourceName: string; resourceType: string }) => {
+    const resourceBuilds = buildsHistory
+      .filter(b => b.resourceName === row.resourceName)
+      .sort((a, b) => b.timestamp - a.timestamp);
 
-    if (currentResource) {
-      return (
-        <Grid container spacing={1} alignItems="center">
-          {currentResource.status === 'running' && (
-            <Grid item>
-              <CircularProgress size={20} />
-            </Grid>
-          )}
-          <Grid item>
-            <Button
-              variant="contained"
-              color={currentResource.status === 'running' ? 'secondary' : 'primary'}
-              onClick={() => {
-                if (currentResource.status === 'running') {
-                  setLastBuildId(currentResource.buildId);
-                } else if (currentResource.status === 'queued') {
-                  // Opção para cancelar se necessário
-                }
-              }}
-              disabled={currentResource.status === 'queued'}
-            >
-              {currentResource.status === 'running' ? 'Acompanhar' : 'Na fila'}
-            </Button>
-            <Typography variant="caption" display="block">
-              Posição: {position} de {totalInQueue}
-            </Typography>
-            {currentResource.status === 'running' && (
-              <Typography variant="caption" display="block" color="textSecondary">
-                Em execução
-              </Typography>
-            )}
-          </Grid>
-        </Grid>
-      );
-    }
+    const latestBuild = resourceBuilds[0];
+    const isActive = latestBuild?.buildId === activeBuildId;
+    const isRunning = latestBuild?.status === 'inProgress';
 
     return (
-      <Button
-        variant="contained"
-        color="primary"
-        onClick={() => handleOpenModal(row)}
-        disabled={loading}
-      >
-        Executar
-      </Button>
+      <Grid container spacing={1} alignItems="center">
+        <Grid item>
+          <Button
+            variant="contained"
+            color={isRunning ? 'secondary' : 'primary'}
+            onClick={() => latestBuild ? trackBuild(latestBuild.buildId) : handleOpenModal(row)}
+            disabled={loading}
+            startIcon={isRunning && <CircularProgress size={14} />}
+          >
+            {latestBuild ? (
+              isRunning ? 'Acompanhar' : 'Executar Novamente'
+            ) : 'Executar'}
+          </Button>
+        </Grid>
+
+        {resourceBuilds.length > 0 && (
+          <Grid item>
+            <Tooltip title="Ver histórico de builds">
+              <Chip
+                size="small"
+                icon={<HistoryIcon fontSize="small" />}
+                label={resourceBuilds.length}
+                onClick={() => trackBuild(latestBuild.buildId)}
+                variant="outlined"
+              />
+            </Tooltip>
+          </Grid>
+        )}
+      </Grid>
     );
   };
 
@@ -129,41 +154,83 @@ export const AzureServiceBusContent = () => {
     <Page themeId="tool">
       <Content>
         <Grid container spacing={3}>
-          <Grid item xs={6}>
-            <ResourceTable
-              combinedData={combinedData}
-              renderActionButton={renderActionButton}
-            />
+          {/* Coluna da Tabela */}
+          <Grid item xs={12} md={(activeBuildId || build) ? 6 : 12}>
+            <Grid container spacing={3} direction="column">
+              <Grid item>
+                <Grid container justifyContent="space-between" alignItems="center">
+                  <Grid item>
+                    <Typography variant="h4">Azure Service Bus Pipelines</Typography>
+                  </Grid>
+                  <Grid item>
+                    <Tooltip title="Limpar histórico">
+                      <IconButton
+                        onClick={clearHistory}
+                        disabled={buildsHistory.length === 0}
+                      >
+                        <ClearAllIcon />
+                      </IconButton>
+                    </Tooltip>
+                  </Grid>
+                </Grid>
+              </Grid>
+
+              <Grid item>
+                <ResourceTable
+                  combinedData={combinedData}
+                  renderActionButton={renderActionButton}
+                />
+              </Grid>
+            </Grid>
           </Grid>
-          <Grid item xs={6}>
-            <InfoCard
-              title={
-                build ? (
+
+          {/* Coluna dos Logs */}
+          {(activeBuildId || build) && (
+            <Grid item xs={12} md={6}>
+              <InfoCard
+                title={
                   <Grid container justifyContent="space-between" alignItems="center">
                     <Grid item>
-                      <Link href={build._links.web.href} target="_blank" rel="noreferrer">
-                        Logs do Build #{build.buildNumber}
-                      </Link>
+                      {build ? (
+                        <Link href={build._links.web.href} target="_blank" rel="noreferrer">
+                          Build #{build.buildNumber} ({build.status})
+                        </Link>
+                      ) : (
+                        <Typography>Loading build #{activeBuildId}...</Typography>
+                      )}
                     </Grid>
                     <Grid item>
-                      {build.status === 'completed' ? (
-                        <Button variant="contained" color="primary" onClick={resetState}>
-                          Limpar
-                        </Button>
-                      ) : null}
+                      <Button
+                        variant="outlined"
+                        onClick={clearBuild}
+                        disabled={loading}
+                        size="small"
+                      >
+                        Fechar
+                      </Button>
                     </Grid>
                   </Grid>
-                ) : 'Logs do Build'
-              }
-            >
-              {buildLogsDetails && <BuildLogs buildLogsDetails={buildLogsDetails} />}
-            </InfoCard>
-          </Grid>
+                }
+              >
+                {loading && !buildLogsDetails.length ? (
+                  <Progress />
+                ) : (
+                  <div style={{ height: '500px', overflow: 'auto' }}>
+                    <BuildLogs buildLogsDetails={buildLogsDetails} />
+                  </div>
+                )}
+              </InfoCard>
+            </Grid>
+          )}
         </Grid>
       </Content>
 
       {selectedResource && (
-        <ReprocessModal open={modalOpen} onClose={handleCloseModal} title="Reprocessar Dead Letter">
+        <ReprocessModal
+          open={modalOpen}
+          onClose={handleCloseModal}
+          title={`Reprocessar ${selectedResource.resourceType === 'queue' ? 'Fila' : 'Tópico'}`}
+        >
           <ReprocessForm
             onSubmit={handleSubmit}
             serviceName={serviceName}
@@ -180,12 +247,22 @@ export const AzureServiceBusContent = () => {
         anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
       >
         <Alert
-          severity={alertMessage.startsWith('Erro') ? 'error' : 'success'}
+          severity={alertMessage.startsWith('Error') ? 'error' : 'success'}
           onClose={() => setAlertOpen(false)}
         >
           {alertMessage}
         </Alert>
       </Snackbar>
+
+      {error && (
+        <Snackbar
+          open={!!error}
+          autoHideDuration={6000}
+          onClose={() => setError(null)}
+        >
+          <Alert severity="error">{error}</Alert>
+        </Snackbar>
+      )}
     </Page>
   );
 };

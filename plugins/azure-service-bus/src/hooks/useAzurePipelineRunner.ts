@@ -1,234 +1,234 @@
-/* eslint-disable consistent-return */
-/* eslint-disable @typescript-eslint/no-use-before-define */
 import { useEffect, useRef, useState } from 'react';
 import { useApi } from '@backstage/core-plugin-api';
 import { AzureServiceBusApiRef } from '../api';
 import { Build, BuildLog, BuildLogFull, PipelineParams } from '../types';
 
 type ResourceType = 'queue' | 'topic';
-type QueueStatus = 'queued' | 'running' | 'completed';
+type BuildStatus = 'inProgress' | 'completed' | 'failed' | 'canceled';
 
-interface QueueItem {
+interface BuildItem {
   resourceName: string;
   resourceType: ResourceType;
   buildId: number;
-  status: QueueStatus;
+  status: BuildStatus;
   timestamp: number;
+  webUrl?: string;
 }
 
 export interface useAzurePipelineRunnerReturn {
   loading: boolean;
-  lastBuildId: number | null;
+  activeBuildId: number | null;
   build: Build | null;
-  buildLogs: BuildLog[] | null;
-  buildLogsDetails: BuildLogFull[] | null;
+  buildLogs: BuildLog[];
+  buildLogsDetails: BuildLogFull[];
   error: string | null;
-  queueManagerState: QueueItem[];
-  setLastBuildId: (id: number) => void;
-  setError: (error: string | null) => void;
+  setError: (message: string | null) => void;
+  buildsHistory: BuildItem[];
+  trackBuild: (buildId: number) => void;
   triggerPipeline: (data: PipelineParams) => Promise<void>;
-  resetState: () => void;
-  startRunning: (resourceName: string) => void;
-  completeRun: (resourceName: string) => void;
+  clearBuild: () => void;
+  clearHistory: () => void;
 }
 
-const LOCAL_STORAGE_KEY = 'azurePipelineQueueManager';
+const HISTORY_KEY = 'azurePipelineBuildsHistory';
 
 export const useAzurePipelineRunner = (): useAzurePipelineRunnerReturn => {
   const [loading, setLoading] = useState(false);
-  const [lastBuildId, setLastBuildId] = useState<number | null>(null);
+  const [activeBuildId, setActiveBuildId] = useState<number | null>(null);
   const [build, setBuild] = useState<Build | null>(null);
   const [buildLogs, setBuildLogs] = useState<BuildLog[]>([]);
   const [buildLogsDetails, setBuildLogsDetails] = useState<BuildLogFull[]>([]);
   const [error, setError] = useState<string | null>(null);
-  const [queueManagerState, setQueueManagerState] = useState<QueueItem[]>([]);
-
+  const [buildsHistory, setBuildsHistory] = useState<BuildItem[]>([]);
   const logsRef = useRef(new Set<number>());
+  const pollingRef = useRef<NodeJS.Timeout>();
   const azureServiceBusApi = useApi(AzureServiceBusApiRef);
 
-  // Carrega os builds em execução do localStorage quando o hook é inicializado
-  useEffect(() => {
-    const savedQueues = localStorage.getItem(LOCAL_STORAGE_KEY);
-    if (savedQueues) {
-      const queues: QueueItem[] = JSON.parse(savedQueues);
-      // Filtra itens com mais de 24 horas para limpeza
-      const filteredQueues = queues.filter(
-        q => Date.now() - q.timestamp < 86400000,
+  const updateBuildStatus = (buildId: number, status: BuildStatus) => {
+    setBuildsHistory(prev => {
+      const updated = prev.map(item =>
+        item.buildId === buildId ? { ...item, status } : item,
       );
-      setQueueManagerState(filteredQueues);
-      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(filteredQueues));
-    }
-  }, []);
+      localStorage.setItem(HISTORY_KEY, JSON.stringify(updated));
+      return updated;
+    });
+  };
 
-  const updateQueueState = (
-    newQueue: Partial<QueueItem> & { resourceName: string },
-  ) => {
-    setQueueManagerState(prevQueues => {
-      const existingIndex = prevQueues.findIndex(
-        q => q.resourceName === newQueue.resourceName,
-      );
-      let updatedQueues: QueueItem[];
+  const addNewBuild = (newBuild: BuildItem) => {
+    setBuildsHistory(prev => {
+      const updated = [...prev, newBuild];
+      localStorage.setItem(HISTORY_KEY, JSON.stringify(updated));
+      return updated;
+    });
+  };
 
-      if (existingIndex !== -1) {
-        updatedQueues = [...prevQueues];
-        updatedQueues[existingIndex] = {
-          ...updatedQueues[existingIndex],
-          ...newQueue,
-          timestamp:
-            newQueue.timestamp || updatedQueues[existingIndex].timestamp,
-        };
-      } else {
-        updatedQueues = [
-          ...prevQueues,
-          {
-            resourceName: newQueue.resourceName,
-            resourceType: newQueue.resourceType || 'queue',
-            buildId: newQueue.buildId || 0,
-            status: newQueue.status || 'queued',
-            timestamp: newQueue.timestamp || Date.now(),
-          },
-        ];
+  const fetchBuildData = async (buildId: number) => {
+    try {
+      const currentBuild = await azureServiceBusApi.fetchBuildById(buildId);
+      if (!currentBuild) {
+        throw new Error('Build not found');
       }
 
-      // Ordena a fila: running first, then queued by timestamp
-      updatedQueues.sort((a, b) => {
-        if (a.status === 'running' && b.status !== 'running') return -1;
-        if (a.status !== 'running' && b.status === 'running') return 1;
-        return a.timestamp - b.timestamp;
-      });
+      const logs = await azureServiceBusApi.fetchBuildLogs(buildId);
 
-      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(updatedQueues));
-      return updatedQueues;
-    });
-  };
+      // Convert Azure DevOps status to our BuildStatus type
+      const statusMap: Record<string, BuildStatus> = {
+        inProgress: 'inProgress',
+        completed: 'completed',
+        cancelling: 'canceled',
+        cancelled: 'canceled',
+        failed: 'failed',
+      };
 
-  const startRunning = (resourceName: string) => {
-    updateQueueState({
-      resourceName,
-      status: 'running',
-    });
-  };
+      const mappedStatus = statusMap[currentBuild.status];
 
-  const completeRun = (resourceName: string) => {
-    setQueueManagerState(prevQueues => {
-      const updatedQueues = prevQueues.filter(
-        q => q.resourceName !== resourceName,
+      setBuild(currentBuild);
+      setBuildLogs(logs.value || []);
+      updateBuildStatus(buildId, mappedStatus);
+
+      if (logs.value?.length) {
+        const detailedLogs = await Promise.all(
+          logs.value.map(async log => {
+            if (!logsRef.current.has(log.id)) {
+              logsRef.current.add(log.id);
+              return azureServiceBusApi.fetchLogById(log.id, buildId);
+            }
+            return null;
+          }),
+        );
+
+        const filteredLogs = detailedLogs.filter(Boolean) as BuildLogFull[];
+        if (filteredLogs.length) {
+          setBuildLogsDetails(prev => [...prev, ...filteredLogs]);
+        }
+      }
+
+      return mappedStatus;
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : 'Failed to fetch build data',
       );
-      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(updatedQueues));
-      return updatedQueues;
-    });
+      throw err;
+    }
   };
 
-  const triggerPipeline = async (data: PipelineParams): Promise<void> => {
+  const startPolling = (buildId: number) => {
+    if (pollingRef.current) {
+      clearInterval(pollingRef.current);
+    }
+
+    pollingRef.current = setInterval(async () => {
+      try {
+        const status = await fetchBuildData(buildId);
+        if (status !== 'inProgress') {
+          if (pollingRef.current) {
+            clearInterval(pollingRef.current);
+          }
+        }
+      } catch (err) {
+        if (pollingRef.current) {
+          clearInterval(pollingRef.current);
+        }
+      }
+    }, 5000);
+  };
+
+  const trackBuild = async (buildId: number) => {
+    if (pollingRef.current) {
+      clearInterval(pollingRef.current);
+    }
+
+    setActiveBuildId(buildId);
     setLoading(true);
     setError(null);
-    try {
-      const response = await azureServiceBusApi.triggerPipeline(data);
-      setLastBuildId(response.id);
-      setBuild(response);
-      setBuildLogs([]);
-      setBuildLogsDetails([]);
-      logsRef.current.clear();
 
-      updateQueueState({
-        resourceName: data.resource_name,
-        resourceType: data.resource_type as ResourceType,
-        buildId: response.id,
-        status: 'queued',
-      });
+    try {
+      await fetchBuildData(buildId);
+      startPolling(buildId);
     } catch (err) {
-      setError('Erro ao iniciar pipeline');
+      setError('Failed to fetch build data');
     } finally {
       setLoading(false);
     }
   };
 
-  const resetState = () => {
-    setLastBuildId(null);
+  const triggerPipeline = async (data: PipelineParams): Promise<void> => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      const response = await azureServiceBusApi.triggerPipeline(data);
+
+      const newBuild: BuildItem = {
+        resourceName: data.resource_name,
+        resourceType: data.resource_type,
+        buildId: response.id,
+        status: 'inProgress',
+        timestamp: Date.now(),
+        webUrl: response._links?.web?.href,
+      };
+
+      addNewBuild(newBuild);
+      await trackBuild(response.id);
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : 'Failed to trigger pipeline',
+      );
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const clearBuild = () => {
+    if (pollingRef.current) {
+      clearInterval(pollingRef.current);
+    }
+    setActiveBuildId(null);
     setBuild(null);
     setBuildLogs([]);
     setBuildLogsDetails([]);
     logsRef.current.clear();
   };
 
+  const clearHistory = () => {
+    setBuildsHistory([]);
+    localStorage.removeItem(HISTORY_KEY);
+  };
+
+  // Carrega histórico e limpa builds antigos
   useEffect(() => {
-    if (!lastBuildId || !build) return;
+    const savedHistory = localStorage.getItem(HISTORY_KEY);
+    if (savedHistory) {
+      const history = JSON.parse(savedHistory);
+      // Mantém apenas builds dos últimos 7 dias
+      const oneWeekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
+      const filteredHistory = history.filter(
+        (b: BuildItem) => b.timestamp > oneWeekAgo,
+      );
+      setBuildsHistory(filteredHistory);
+      localStorage.setItem(HISTORY_KEY, JSON.stringify(filteredHistory));
+    }
 
-    const fetchLogs = async () => {
-      try {
-        // 1. Buscar status do build
-        const currentBuild = await azureServiceBusApi.fetchBuildById(
-          lastBuildId,
-        );
-        setBuild(currentBuild);
-
-        // 2. Se o build estiver em execução, buscar logs
-        if (
-          currentBuild?.status === 'inProgress' ||
-          currentBuild?.status === 'completed'
-        ) {
-          const logs = await azureServiceBusApi.fetchBuildLogs(lastBuildId);
-
-          if (logs?.value?.length) {
-            setBuildLogs(logs.value);
-
-            const logsDetalhados = await Promise.all(
-              logs.value.map(async log => {
-                if (!logsRef.current.has(log.id)) {
-                  logsRef.current.add(log.id);
-                  return azureServiceBusApi.fetchLogById(log.id, lastBuildId);
-                }
-                return null;
-              }),
-            );
-
-            const filteredLogs = logsDetalhados.filter(
-              log => log !== null,
-            ) as BuildLogFull[];
-            if (filteredLogs.length > 0) {
-              setBuildLogsDetails(prev => [...prev, ...filteredLogs]);
-            }
-          }
-        }
-
-        // Atualiza estado da fila
-        const queueItem = currentBuild
-          ? queueManagerState.find(q => q.buildId === currentBuild.id)
-          : undefined;
-
-        if (queueItem) {
-          if (
-            currentBuild?.status === 'inProgress' &&
-            queueItem.status !== 'running'
-          ) {
-            startRunning(queueItem.resourceName);
-          } else if (currentBuild && currentBuild.status === 'completed') {
-            completeRun(queueItem.resourceName);
-          }
-        }
-      } catch (err) {
-        setError('Erro durante o polling');
+    return () => {
+      if (pollingRef.current) {
+        clearInterval(pollingRef.current);
       }
     };
-
-    fetchLogs();
-    const pollingInterval = setInterval(fetchLogs, 5000);
-    return () => clearInterval(pollingInterval);
-  }, [lastBuildId, build?.id, azureServiceBusApi]);
+  }, []);
 
   return {
     loading,
-    lastBuildId,
+    activeBuildId,
     build,
     buildLogs,
     buildLogsDetails,
-    queueManagerState,
-    setLastBuildId,
     error,
+    buildsHistory,
     setError,
+    trackBuild,
     triggerPipeline,
-    resetState,
-    startRunning,
-    completeRun,
+    clearBuild,
+    clearHistory,
   };
 };
