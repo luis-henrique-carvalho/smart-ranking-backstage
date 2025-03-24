@@ -16,7 +16,7 @@ const BuildLogs: React.FC<BuildLogsProps> = ({ buildLogsDetails }) => {
         },
     });
 
-    const classes = useStyles(); // Use os estilos
+    const classes = useStyles();
 
     const scrollToBottom = () => {
         const logViewerInnerDiv = document.querySelector(
