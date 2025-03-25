@@ -30,6 +30,7 @@ export interface useAzurePipelineRunnerReturn {
   resetState: () => void;
   startRunning: (resourceName: string) => void;
   completeRun: (resourceName: string) => void;
+  fetchLogs: (buildId: number) => void;
 }
 
 const LOCAL_STORAGE_KEY = 'azurePipelineQueueManager';
@@ -90,7 +91,6 @@ export const useAzurePipelineRunner = (): useAzurePipelineRunnerReturn => {
         ];
       }
 
-      // Ordena a fila: running first, then queued by timestamp
       updatedQueues.sort((a, b) => {
         if (a.status === 'running' && b.status !== 'running') return -1;
         if (a.status !== 'running' && b.status === 'running') return 1;
@@ -110,12 +110,9 @@ export const useAzurePipelineRunner = (): useAzurePipelineRunnerReturn => {
   };
 
   const completeRun = (resourceName: string) => {
-    setQueueManagerState(prevQueues => {
-      const updatedQueues = prevQueues.filter(
-        q => q.resourceName !== resourceName,
-      );
-      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(updatedQueues));
-      return updatedQueues;
+    updateQueueState({
+      resourceName,
+      status: 'completed',
     });
   };
 
@@ -151,70 +148,85 @@ export const useAzurePipelineRunner = (): useAzurePipelineRunnerReturn => {
     logsRef.current.clear();
   };
 
-  useEffect(() => {
-    if (!lastBuildId || !build) return;
+  const fetchBuildLogsDetails = async (buildId: number) => {
+    try {
+      const logs = await azureServiceBusApi.fetchBuildLogs(buildId);
 
-    const fetchLogs = async () => {
-      try {
-        // 1. Buscar status do build
-        const currentBuild = await azureServiceBusApi.fetchBuildById(
-          lastBuildId,
-        );
-        setBuild(currentBuild);
+      if (logs?.value?.length) {
+        setBuildLogs(logs.value);
 
-        // 2. Se o build estiver em execução, buscar logs
-        if (
-          currentBuild?.status === 'inProgress' ||
-          currentBuild?.status === 'completed'
-        ) {
-          const logs = await azureServiceBusApi.fetchBuildLogs(lastBuildId);
-
-          if (logs?.value?.length) {
-            setBuildLogs(logs.value);
-
-            const logsDetalhados = await Promise.all(
-              logs.value.map(async log => {
-                if (!logsRef.current.has(log.id)) {
-                  logsRef.current.add(log.id);
-                  return azureServiceBusApi.fetchLogById(log.id, lastBuildId);
-                }
-                return null;
-              }),
-            );
-
-            const filteredLogs = logsDetalhados.filter(
-              log => log !== null,
-            ) as BuildLogFull[];
-            if (filteredLogs.length > 0) {
-              setBuildLogsDetails(prev => [...prev, ...filteredLogs]);
+        const logsDetalhados = await Promise.all(
+          logs.value.map(async log => {
+            if (!logsRef.current.has(log.id)) {
+              logsRef.current.add(log.id);
+              return azureServiceBusApi.fetchLogById(log.id, buildId);
             }
-          }
-        }
+            return null;
+          }),
+        );
 
-        // Atualiza estado da fila
-        const queueItem = currentBuild
-          ? queueManagerState.find(q => q.buildId === currentBuild.id)
-          : undefined;
-
-        if (queueItem) {
-          if (
-            currentBuild?.status === 'inProgress' &&
-            queueItem.status !== 'running'
-          ) {
-            startRunning(queueItem.resourceName);
-          } else if (currentBuild && currentBuild.status === 'completed') {
-            completeRun(queueItem.resourceName);
-          }
+        const filteredLogs = logsDetalhados.filter(
+          log => log !== null,
+        ) as BuildLogFull[];
+        if (filteredLogs.length > 0) {
+          setBuildLogsDetails(prev => [...prev, ...filteredLogs]);
         }
-      } catch (err) {
-        setError('Erro durante o polling');
+      }
+    } catch (err) {
+      setError('Erro ao buscar logs do build');
+    }
+  };
+
+  const fetchLogs = async (buildId: number) => {
+    console.log('fetchLogs', buildId);
+    try {
+      // 1. Buscar status do build
+      const currentBuild = await azureServiceBusApi.fetchBuildById(buildId);
+      setBuild(currentBuild);
+
+      // 2. Se o build estiver em execução, buscar logs
+      if (
+        currentBuild?.status === 'inProgress' ||
+        currentBuild?.status === 'completed'
+      ) {
+        await fetchBuildLogsDetails(buildId);
+      }
+      // Atualiza estado da fila
+      const queueItem = currentBuild
+        ? queueManagerState.find(q => q.buildId === currentBuild.id)
+        : undefined;
+
+      if (queueItem) {
+        if (
+          currentBuild?.status === 'inProgress' &&
+          queueItem.status !== 'running'
+        ) {
+          startRunning(queueItem.resourceName);
+        } else if (currentBuild && currentBuild.status === 'completed') {
+          completeRun(queueItem.resourceName);
+        }
+      }
+    } catch (err) {
+      setError('Erro durante o polling');
+    }
+  };
+
+  useEffect(() => {
+    if (queueManagerState.length === 0) return;
+
+    const processQueueItems = async () => {
+      for (const q of queueManagerState) {
+        if (q.status === 'queued' || q.status === 'running') {
+          await fetchLogs(q.buildId);
+        }
       }
     };
 
-    fetchLogs();
-    const pollingInterval = setInterval(fetchLogs, 5000);
+    processQueueItems();
+
+    const pollingInterval = setInterval(processQueueItems, 5000);
     return () => clearInterval(pollingInterval);
-  }, [lastBuildId, build?.id, azureServiceBusApi]);
+  }, [lastBuildId, azureServiceBusApi]);
 
   return {
     loading,
@@ -230,5 +242,6 @@ export const useAzurePipelineRunner = (): useAzurePipelineRunnerReturn => {
     resetState,
     startRunning,
     completeRun,
+    fetchLogs,
   };
 };

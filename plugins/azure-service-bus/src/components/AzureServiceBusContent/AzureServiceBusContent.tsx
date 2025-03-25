@@ -25,9 +25,7 @@ export const AzureServiceBusContent = () => {
     build,
     resetState,
     queueManagerState,
-    setLastBuildId,
-    startRunning,
-    completeRun,
+    fetchLogs
   } = useAzurePipelineRunner();
 
   const config = useApi(configApiRef);
@@ -74,7 +72,7 @@ export const AzureServiceBusContent = () => {
 
   const renderActionButton = (row: { resourceName: string, resourceType: string }) => {
     const currentResource = queueManagerState.find(q => q.resourceName === row.resourceName);
-    const position = queueManagerState.findIndex(q => q.resourceName === row.resourceName) + 1;
+    const position = queueManagerState.findIndex(q => q.resourceName === row.resourceName && q.status !== 'completed') + 1;
     const totalInQueue = queueManagerState.filter(q => q.status !== 'completed').length;
 
     if (currentResource) {
@@ -90,26 +88,25 @@ export const AzureServiceBusContent = () => {
               variant="contained"
               color={currentResource.status === 'running' ? 'secondary' : 'primary'}
               onClick={() => {
-                if (currentResource.status === 'running') {
-                  setLastBuildId(currentResource.buildId);
-                } else if (currentResource.status === 'queued') {
-                  // Opção para cancelar se necessário
-                }
+                fetchLogs(currentResource.buildId);
               }}
-              disabled={currentResource.status === 'queued'}
             >
-              {currentResource.status === 'running' ? 'Acompanhar' : 'Na fila'}
+              {currentResource.status === 'running' && 'Em execução'}
+              {currentResource.status === 'queued' && 'Aguardando'}
+              {currentResource.status === 'completed' && 'Concluído'}
             </Button>
-            <Typography variant="caption" display="block">
-              Posição: {position} de {totalInQueue}
-            </Typography>
+            {currentResource.status !== 'completed' &&
+              < Typography variant="caption" display="block">
+                Posição: {position} de {totalInQueue}
+              </Typography>
+            }
             {currentResource.status === 'running' && (
               <Typography variant="caption" display="block" color="textSecondary">
                 Em execução
               </Typography>
             )}
           </Grid>
-        </Grid>
+        </Grid >
       );
     }
 
