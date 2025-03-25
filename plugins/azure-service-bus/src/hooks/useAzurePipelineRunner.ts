@@ -68,6 +68,7 @@ export const useAzurePipelineRunner = (): useAzurePipelineRunnerReturn => {
       const existingIndex = prevQueues.findIndex(
         q => q.resourceName === newQueue.resourceName,
       );
+
       let updatedQueues: QueueItem[];
 
       if (existingIndex !== -1) {
@@ -177,6 +178,32 @@ export const useAzurePipelineRunner = (): useAzurePipelineRunnerReturn => {
     }
   };
 
+  const fetchAllLogsDetails = async (buildId: number) => {
+    try {
+      const logs = await azureServiceBusApi.fetchBuildLogs(buildId);
+
+      if (logs?.value?.length) {
+        setBuildLogs(logs.value);
+
+        const detailedLogs = await Promise.all(
+          logs.value.map(log =>
+            azureServiceBusApi.fetchLogById(log.id, buildId),
+          ),
+        );
+
+        const filteredLogs = detailedLogs.filter(
+          log => log !== null,
+        ) as BuildLogFull[];
+
+        if (filteredLogs.length > 0) {
+          setBuildLogsDetails(filteredLogs);
+        }
+      }
+    } catch (err) {
+      setError('Erro ao buscar todos os logs do build');
+    }
+  };
+
   const fetchLogs = async (buildId: number) => {
     console.log('fetchLogs', buildId);
     try {
@@ -185,11 +212,10 @@ export const useAzurePipelineRunner = (): useAzurePipelineRunnerReturn => {
       setBuild(currentBuild);
 
       // 2. Se o build estiver em execução, buscar logs
-      if (
-        currentBuild?.status === 'inProgress' ||
-        currentBuild?.status === 'completed'
-      ) {
+      if (currentBuild?.status === 'inProgress') {
         await fetchBuildLogsDetails(buildId);
+      } else if (currentBuild?.status === 'completed') {
+        await fetchAllLogsDetails(buildId);
       }
       // Atualiza estado da fila
       const queueItem = currentBuild
@@ -221,6 +247,8 @@ export const useAzurePipelineRunner = (): useAzurePipelineRunnerReturn => {
         }
       }
     };
+
+    console.log('processQueueItems');
 
     processQueueItems();
 

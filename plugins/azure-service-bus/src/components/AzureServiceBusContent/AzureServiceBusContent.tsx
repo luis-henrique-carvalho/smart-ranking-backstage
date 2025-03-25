@@ -84,19 +84,40 @@ export const AzureServiceBusContent = () => {
             </Grid>
           )}
           <Grid item>
-            <Button
-              variant="contained"
-              color={currentResource.status === 'running' ? 'secondary' : 'primary'}
-              onClick={() => {
-                fetchLogs(currentResource.buildId);
-              }}
-            >
-              {currentResource.status === 'running' && 'Em execução'}
-              {currentResource.status === 'queued' && 'Aguardando'}
-              {currentResource.status === 'completed' && 'Concluído'}
-            </Button>
+            {currentResource.status === 'completed' ? (
+              <>
+                <Button
+                  variant="contained"
+                  color="primary"
+                  onClick={() => {
+                    fetchLogs(currentResource.buildId);
+                  }}
+                >
+                  Ver Logs
+                </Button>
+                <Button
+                  variant="contained"
+                  color="secondary"
+                  onClick={() => handleOpenModal(row)}
+                  style={{ marginLeft: '8px' }}
+                >
+                  Executar
+                </Button>
+              </>
+            ) : (
+              <Button
+                variant="contained"
+                color={currentResource.status === 'running' ? 'secondary' : 'primary'}
+                onClick={() => {
+                  fetchLogs(currentResource.buildId);
+                }}
+              >
+                {currentResource.status === 'running' && 'Em execução'}
+                {currentResource.status === 'queued' && 'Aguardando'}
+              </Button>
+            )}
             {currentResource.status !== 'completed' &&
-              < Typography variant="caption" display="block">
+              <Typography variant="caption" display="block">
                 Posição: {position} de {totalInQueue}
               </Typography>
             }
@@ -106,7 +127,7 @@ export const AzureServiceBusContent = () => {
               </Typography>
             )}
           </Grid>
-        </Grid >
+        </Grid>
       );
     }
 
