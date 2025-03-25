@@ -1,15 +1,15 @@
 import React, { useState } from 'react';
-import { Button, CircularProgress, Grid, Link, Snackbar, Typography } from '@material-ui/core';
+import { Button, CircularProgress, Grid, Snackbar, Typography } from '@material-ui/core';
 import { InfoCard, Page, Content } from '@backstage/core-components';
 import { useEntity, MissingAnnotationEmptyState } from '@backstage/plugin-catalog-react';
 import { useApi, configApiRef } from '@backstage/core-plugin-api';
 import { PipelineParams } from '../../types';
-import { useAzurePipelineRunner } from '../../hooks/useAzurePipelineRunner';
 import { ResourceTable } from './components/ResourceTable';
 import ReprocessModal from './components/ReprocessModal';
 import ReprocessForm from './components/ReprocessForm';
 import BuildLogs from './components/BuildLogs';
 import { Alert } from '@material-ui/lab';
+import { useAzurePipelineRunner } from '../../hooks/useAzurePipelineRunner';
 
 export const AzureServiceBusContent = () => {
   const { entity } = useEntity();
@@ -22,10 +22,9 @@ export const AzureServiceBusContent = () => {
     loading,
     triggerPipeline,
     buildLogsDetails,
-    build,
-    resetState,
-    queueManagerState,
-    fetchLogs
+    currentBuildView,
+    changeCurrentBuildViewAndFetchLogs,
+    buildMenagerState,
   } = useAzurePipelineRunner();
 
   const config = useApi(configApiRef);
@@ -71,9 +70,10 @@ export const AzureServiceBusContent = () => {
   };
 
   const renderActionButton = (row: { resourceName: string, resourceType: string }) => {
-    const currentResource = queueManagerState.find(q => q.resourceName === row.resourceName);
-    const position = queueManagerState.findIndex(q => q.resourceName === row.resourceName && q.status !== 'completed') + 1;
-    const totalInQueue = queueManagerState.filter(q => q.status !== 'completed').length;
+    const currentResource = buildMenagerState[row.resourceName];
+    // verifica a posição do recurso na fila
+    // verifica quantos estão com status difernete de completed
+    const totalInQueue = Object.values(buildMenagerState).filter(q => q.status !== 'completed').length;
 
     if (currentResource) {
       return (
@@ -90,7 +90,7 @@ export const AzureServiceBusContent = () => {
                   variant="contained"
                   color="primary"
                   onClick={() => {
-                    fetchLogs(currentResource.buildId);
+                    changeCurrentBuildViewAndFetchLogs(row.resourceName);
                   }}
                 >
                   Ver Logs
@@ -109,7 +109,7 @@ export const AzureServiceBusContent = () => {
                 variant="contained"
                 color={currentResource.status === 'running' ? 'secondary' : 'primary'}
                 onClick={() => {
-                  fetchLogs(currentResource.buildId);
+                  changeCurrentBuildViewAndFetchLogs(row.resourceName);
                 }}
               >
                 {currentResource.status === 'running' && 'Em execução'}
@@ -118,7 +118,7 @@ export const AzureServiceBusContent = () => {
             )}
             {currentResource.status !== 'completed' &&
               <Typography variant="caption" display="block">
-                Posição: {position} de {totalInQueue}
+                Quantidade em fila: {totalInQueue}
               </Typography>
             }
             {currentResource.status === 'running' && (
@@ -143,6 +143,8 @@ export const AzureServiceBusContent = () => {
     );
   };
 
+  const buildView = currentBuildView ? buildMenagerState[currentBuildView] : undefined;
+
   return (
     <Page themeId="tool">
       <Content>
@@ -156,19 +158,17 @@ export const AzureServiceBusContent = () => {
           <Grid item xs={6}>
             <InfoCard
               title={
-                build ? (
+                buildView ? (
                   <Grid container justifyContent="space-between" alignItems="center">
                     <Grid item>
-                      <Link href={build._links.web.href} target="_blank" rel="noreferrer">
-                        Logs do Build #{build.buildNumber}
-                      </Link>
+                      <Typography>
+                        Logs do Build #{buildView.buildId} = {currentBuildView}
+                      </Typography>
                     </Grid>
                     <Grid item>
-                      {build.status === 'completed' ? (
-                        <Button variant="contained" color="primary" onClick={resetState}>
-                          Limpar
-                        </Button>
-                      ) : null}
+                      <Typography>
+                        Status: {buildView.status}
+                      </Typography>
                     </Grid>
                   </Grid>
                 ) : 'Logs do Build'
