@@ -16,7 +16,7 @@ export interface useAzurePipelineRunnerReturn {
   changeCurrentBuildViewAndFetchLogs: (resourceName: string) => void;
 }
 
-type BuildMenagerState = Record<string, BuildItem>;
+type BuildMenagerStateType = Record<string, BuildItem>;
 
 const LOCAL_STORAGE_KEY = 'azurePipelineQueueManager';
 
@@ -25,45 +25,30 @@ export const useAzurePipelineRunner = (): useAzurePipelineRunnerReturn => {
   const [error, setError] = useState<string | null>(null);
   const [buildLogsDetails, setBuildLogsDetails] = useState<BuildLogFull[]>([]);
   const [currentBuildView, setCurrentBuildView] = useState<string | null>(null);
-  const [buildMenagerState, setBuildMenagerState] = useState<BuildMenagerState>(
-    {},
-  );
+  const [buildMenagerState, setBuildMenagerState] =
+    useState<BuildMenagerStateType>({});
 
   const logsRefByBuildId = useRef(new Map<string, number[]>());
   const azureServiceBusApi = useApi(AzureServiceBusApiRef);
 
   useEffect(() => {
     const savedQueues = localStorage.getItem(LOCAL_STORAGE_KEY);
+    if (!savedQueues) return;
 
-    if (savedQueues) {
-      const queues: BuildMenagerState = JSON.parse(savedQueues);
-      const filteredQueues = Object.entries(queues).reduce(
-        (acc, [resourceName, item]) => {
-          if (Date.now() - item.timestamp < 86400000) {
-            acc[resourceName] = item;
-          }
+    const queues: BuildMenagerStateType = JSON.parse(savedQueues);
+    const filteredQueues = Object.fromEntries(
+      Object.entries(queues).filter(
+        ([_, item]) => Date.now() - item.timestamp < 86400000,
+      ),
+    );
 
-          return acc;
-        },
-        {} as BuildMenagerState,
-      );
-
-      setBuildMenagerState(filteredQueues);
-      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(filteredQueues));
-    }
+    setBuildMenagerState(filteredQueues);
+    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(filteredQueues));
   }, []);
 
-  const updateBuildState = (newBuild: BuildMenagerState) => {
+  const updateBuildState = (newBuild: BuildMenagerStateType) => {
     setBuildMenagerState(prevState => {
-      const newState = { ...prevState };
-
-      Object.entries(newBuild).forEach(([resourceName, newItem]) => {
-        newState[resourceName] = {
-          ...prevState[resourceName],
-          ...newItem,
-        };
-      });
-
+      const newState = { ...prevState, ...newBuild };
       localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(newState));
       return newState;
     });
@@ -94,31 +79,6 @@ export const useAzurePipelineRunner = (): useAzurePipelineRunnerReturn => {
   const clearLogsForResource = (resourceName: string) => {
     setBuildLogsDetails([]);
     logsRefByBuildId.current.delete(resourceName);
-  };
-
-  const triggerPipeline = async (data: PipelineParams): Promise<void> => {
-    setLoading(true);
-    setError(null);
-
-    try {
-      const build = await azureServiceBusApi.triggerPipeline(data);
-
-      clearLogsForResource(data.resource_name);
-      setCurrentBuildView(data.resource_name);
-
-      updateBuildState({
-        [data.resource_name]: {
-          resourceType: data.resource_type,
-          buildId: build.id,
-          status: 'queued',
-          timestamp: Date.now(),
-        },
-      });
-    } catch (e) {
-      setError('Erro ao disparar pipeline');
-    } finally {
-      setLoading(false);
-    }
   };
 
   const fetchBuildLogsDetails = async (
@@ -174,6 +134,31 @@ export const useAzurePipelineRunner = (): useAzurePipelineRunnerReturn => {
     }
   };
 
+  const triggerPipeline = async (data: PipelineParams): Promise<void> => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      const build = await azureServiceBusApi.triggerPipeline(data);
+
+      clearLogsForResource(data.resource_name);
+      setCurrentBuildView(data.resource_name);
+
+      updateBuildState({
+        [data.resource_name]: {
+          resourceType: data.resource_type,
+          buildId: build.id,
+          status: 'queued',
+          timestamp: Date.now(),
+        },
+      });
+    } catch (e) {
+      setError('Erro ao disparar pipeline');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
     if (
       !Object.values(buildMenagerState).some(
@@ -190,16 +175,16 @@ export const useAzurePipelineRunner = (): useAzurePipelineRunnerReturn => {
           Object.entries(buildMenagerState)
             .filter(([, q]) => q.status === 'queued' || q.status === 'running')
             .map(async ([resourceName, content]) => {
-              const build = await azureServiceBusApi.fetchBuildById(
+              const buildResp = await azureServiceBusApi.fetchBuildById(
                 content.buildId,
               );
 
-              if (!build) {
+              if (!buildResp) {
                 return;
               }
 
-              const isInProgress = build.status === 'inProgress';
-              const isCompleted = build.status === 'completed';
+              const isInProgress = buildResp.status === 'inProgress';
+              const isCompleted = buildResp.status === 'completed';
 
               if (isInProgress && content.status !== 'running') {
                 startRumBuild(resourceName);
