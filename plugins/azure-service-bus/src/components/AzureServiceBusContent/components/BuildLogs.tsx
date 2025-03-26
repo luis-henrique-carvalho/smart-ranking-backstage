@@ -1,12 +1,12 @@
 import React from "react";
 import { Button, CardContent, Typography, makeStyles } from "@material-ui/core";
 import { LogViewer } from "@backstage/core-components";
-import { BuildLogFull } from "../../../types";
+import { BuildLogDetailsType } from "../../../types";
 import ArrowDownward from "@material-ui/icons/ArrowDownward"; // Importe o ícone
 import Skeleton from "@material-ui/lab/Skeleton"; // Importe o Skeleton
 
 interface BuildLogsProps {
-    buildLogsDetails: BuildLogFull[] | null;
+    buildLogsDetails: BuildLogDetailsType[] | null;
 }
 
 const BuildLogs: React.FC<BuildLogsProps> = ({ buildLogsDetails }) => {

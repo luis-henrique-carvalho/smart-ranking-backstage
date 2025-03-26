@@ -2,13 +2,13 @@ import React, { useState } from 'react';
 import {
     TextField, FormControl, InputLabel, Select, MenuItem, Checkbox, FormControlLabel, Button
 } from '@material-ui/core';
-import { PipelineParams } from '../../../types';
+import { PipelineParamsType } from '../../../types';
 
 type ReprocessFormProps = {
     serviceName: string;
     resourceType: string;
     resourceName: string;
-    onSubmit: (data: PipelineParams) => void;
+    onSubmit: (data: PipelineParamsType) => void;
 };
 
 const ReprocessForm: React.FC<ReprocessFormProps> = ({ serviceName, resourceType, resourceName, onSubmit }) => {

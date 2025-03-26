@@ -1,11 +1,11 @@
-export type PipelineParams = {
+export type PipelineParamsType = {
   service_name: string;
   resource_type: 'topic' | 'queue';
   resource_name: string;
   reprocessing_method: 'safe' | 'fast';
   generate_new_message_id: boolean;
 };
-export interface BuildLog {
+export interface BuildLogType {
   lineCount: number;
   createdOn: string;
   lastChangedOn: string;
@@ -16,10 +16,10 @@ export interface BuildLog {
 
 export interface BuildLogsResponse {
   count: number;
-  value: BuildLog[];
+  value: BuildLogType[];
 }
 
-export interface Build {
+export interface BuildType {
   id: number;
   status: string;
   buildNumber: string;
@@ -30,12 +30,12 @@ export interface Build {
   };
 }
 
-export interface BuildLogFull {
+export interface BuildLogDetailsType {
   id: number;
   value: string[];
 }
 
-export interface BuildItem {
+export interface BuildItemType {
   resourceType: ResourceType;
   buildId: number;
   status: QueueStatus;

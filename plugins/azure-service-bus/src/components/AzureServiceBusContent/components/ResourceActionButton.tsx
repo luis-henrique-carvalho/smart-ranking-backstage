@@ -1,14 +1,14 @@
 import React from 'react';
 import { Button, CircularProgress, Grid, Typography } from '@material-ui/core';
 import { useTheme } from '@material-ui/core/styles';
-import { BuildItem } from '../../../types';
+import { BuildItemType } from '../../../types';
 
 interface ResourceActionButtonProps {
     resource: {
         resourceName: string;
         resourceType: string;
     };
-    buildMenagerState: Record<string, BuildItem>;
+    buildMenagerState: Record<string, BuildItemType>;
     loading: boolean;
     onOpenModal: (resource: { resourceName: string; resourceType: string }) => void;
     onChangeCurrentBuildView: (resourceName: string) => void;

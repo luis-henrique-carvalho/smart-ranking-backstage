@@ -4,7 +4,7 @@ import { Grid, Snackbar } from '@material-ui/core';
 import { InfoCard, Page, Content } from '@backstage/core-components';
 import { useEntity, MissingAnnotationEmptyState } from '@backstage/plugin-catalog-react';
 import { useApi, configApiRef } from '@backstage/core-plugin-api';
-import { PipelineParams } from '../../types';
+import { PipelineParamsType } from '../../types';
 import { ResourceTable } from './components/ResourceTable';
 import ReprocessModal from './components/ReprocessModal';
 import ReprocessForm from './components/ReprocessForm';
@@ -60,7 +60,7 @@ export const AzureServiceBusContent = () => {
     setModalOpen(false);
   };
 
-  const handleSubmit = async (data: PipelineParams) => {
+  const handleSubmit = async (data: PipelineParamsType) => {
     try {
       await triggerPipeline(data);
       setAlertMessage('Pipeline disparado com sucesso!');

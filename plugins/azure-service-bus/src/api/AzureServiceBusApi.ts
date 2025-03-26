@@ -1,9 +1,9 @@
 import { ConfigApi, createApiRef } from '@backstage/core-plugin-api';
 import {
   Build,
-  BuildLogFull,
+  BuildLogDetailsType,
   BuildLogsResponse,
-  PipelineParams,
+  PipelineParamsType,
 } from '../types';
 
 export const AzureServiceBusApiRef = createApiRef<AzureServiceBusApi>({
@@ -11,9 +11,9 @@ export const AzureServiceBusApiRef = createApiRef<AzureServiceBusApi>({
 });
 
 export interface AzureServiceBusApi {
-  triggerPipeline(pipeline_params: PipelineParams): Promise<Build>;
+  triggerPipeline(pipeline_params: PipelineParamsType): Promise<Build>;
   fetchBuildLogs(buildId: number): Promise<BuildLogsResponse>;
-  fetchLogById(logId: number, buildId: number): Promise<BuildLogFull>;
+  fetchLogById(logId: number, buildId: number): Promise<BuildLogDetailsType>;
   fetchBuildById(buildId: number): Promise<Build | null>;
 }
 
@@ -67,13 +67,16 @@ export class AzureServiceBusApiClient implements AzureServiceBusApi {
     return this.fetchFromAzure(url);
   }
 
-  async fetchLogById(logId: number, buildId: number): Promise<BuildLogFull> {
+  async fetchLogById(
+    logId: number,
+    buildId: number,
+  ): Promise<BuildLogDetailsType> {
     const url = `https://dev.azure.com/${this.organization}/${this.project}/_apis/build/builds/${buildId}/logs/${logId}?api-version=7.1`;
 
     return this.fetchFromAzure(url);
   }
 
-  async triggerPipeline(pipeline_params: PipelineParams): Promise<Build> {
+  async triggerPipeline(pipeline_params: PipelineParamsType): Promise<Build> {
     if (!this.pipelineUrl) {
       throw new Error('Erro de configuração: "pipelineUrl" não foi definido.');
     }

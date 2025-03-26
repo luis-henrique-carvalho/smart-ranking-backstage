@@ -2,28 +2,34 @@
 import { useEffect, useRef, useState } from 'react';
 import { AzureServiceBusApiRef } from '../api';
 import { useApi } from '@backstage/core-plugin-api';
-import { BuildItem, BuildLogFull, PipelineParams } from '../types';
+import {
+  BuildItemType,
+  BuildLogDetailsType,
+  PipelineParamsType,
+} from '../types';
 
 export interface useAzurePipelineRunnerReturn {
   loading: boolean;
   error: string | null;
-  buildLogsDetails: BuildLogFull[];
-  buildMenagerState: Record<string, BuildItem>;
+  buildLogsDetails: BuildLogDetailsType[];
+  buildMenagerState: Record<string, BuildItemType>;
   currentBuildView: string | null;
   startRumBuild: (resourceName: string) => Promise<void>;
   completeRumBuild: (resourceName: string) => Promise<void>;
-  triggerPipeline: (data: PipelineParams) => Promise<void>;
+  triggerPipeline: (data: PipelineParamsType) => Promise<void>;
   changeCurrentBuildViewAndFetchLogs: (resourceName: string) => void;
 }
 
-type BuildMenagerStateType = Record<string, BuildItem>;
+type BuildMenagerStateType = Record<string, BuildItemType>;
 
 const LOCAL_STORAGE_KEY = 'azurePipelineQueueManager';
 
 export const useAzurePipelineRunner = (): useAzurePipelineRunnerReturn => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [buildLogsDetails, setBuildLogsDetails] = useState<BuildLogFull[]>([]);
+  const [buildLogsDetails, setBuildLogsDetails] = useState<
+    BuildLogDetailsType[]
+  >([]);
   const [currentBuildView, setCurrentBuildView] = useState<string | null>(null);
   const [buildMenagerState, setBuildMenagerState] =
     useState<BuildMenagerStateType>({});
@@ -109,7 +115,7 @@ export const useAzurePipelineRunner = (): useAzurePipelineRunnerReturn => {
 
         const filteredLogs = detailedLogs.filter(
           log => log !== null,
-        ) as BuildLogFull[];
+        ) as BuildLogDetailsType[];
 
         if (filteredLogs.length > 0) {
           setBuildLogsDetails(prev => [...prev, ...filteredLogs]);
@@ -134,7 +140,7 @@ export const useAzurePipelineRunner = (): useAzurePipelineRunnerReturn => {
     }
   };
 
-  const triggerPipeline = async (data: PipelineParams): Promise<void> => {
+  const triggerPipeline = async (data: PipelineParamsType): Promise<void> => {
     setLoading(true);
     setError(null);
 
