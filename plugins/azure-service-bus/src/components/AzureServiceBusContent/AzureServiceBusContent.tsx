@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Button, CircularProgress, Grid, Snackbar, Typography } from '@material-ui/core';
+import { useTheme } from '@material-ui/core/styles';
+import { Grid, Snackbar } from '@material-ui/core';
 import { InfoCard, Page, Content } from '@backstage/core-components';
 import { useEntity, MissingAnnotationEmptyState } from '@backstage/plugin-catalog-react';
 import { useApi, configApiRef } from '@backstage/core-plugin-api';
@@ -10,6 +11,8 @@ import ReprocessForm from './components/ReprocessForm';
 import BuildLogs from './components/BuildLogs';
 import { Alert } from '@material-ui/lab';
 import { useAzurePipelineRunner } from '../../hooks/useAzurePipelineRunner';
+import { ResourceActionButton } from './components/ResourceActionButton';
+import InfoCardTitle from './components/InfoCardTitle';
 
 export const AzureServiceBusContent = () => {
   const { entity } = useEntity();
@@ -17,7 +20,7 @@ export const AzureServiceBusContent = () => {
   const [selectedResource, setSelectedResource] = useState<{ resourceName: string; resourceType: string } | null>(null);
   const [alertOpen, setAlertOpen] = useState(false);
   const [alertMessage, setAlertMessage] = useState('');
-
+  const theme = useTheme();
   const {
     loading,
     triggerPipeline,
@@ -69,86 +72,21 @@ export const AzureServiceBusContent = () => {
     }
   };
 
-  const renderActionButton = (row: { resourceName: string, resourceType: string }) => {
-    const currentResource = buildMenagerState[row.resourceName];
-    // verifica a posição do recurso na fila
-    // verifica quantos estão com status difernete de completed
-    const totalInQueue = Object.values(buildMenagerState).filter(q => q.status !== 'completed').length;
-
-    if (currentResource) {
-      return (
-        <Grid container spacing={1} alignItems="center">
-          {currentResource.status === 'running' && (
-            <Grid item>
-              <CircularProgress size={20} />
-            </Grid>
-          )}
-          <Grid item>
-            {currentResource.status === 'completed' ? (
-              <>
-                <Button
-                  variant="contained"
-                  color="primary"
-                  onClick={() => {
-                    changeCurrentBuildViewAndFetchLogs(row.resourceName);
-                  }}
-                >
-                  Ver Logs
-                </Button>
-                <Button
-                  variant="contained"
-                  color="secondary"
-                  onClick={() => handleOpenModal(row)}
-                  style={{ marginLeft: '8px' }}
-                >
-                  Executar
-                </Button>
-              </>
-            ) : (
-              <Button
-                variant="contained"
-                color={currentResource.status === 'running' ? 'secondary' : 'primary'}
-                onClick={() => {
-                  changeCurrentBuildViewAndFetchLogs(row.resourceName);
-                }}
-              >
-                {currentResource.status === 'running' && 'Em execução'}
-                {currentResource.status === 'queued' && 'Aguardando'}
-              </Button>
-            )}
-            {currentResource.status !== 'completed' &&
-              <Typography variant="caption" display="block">
-                Quantidade em fila: {totalInQueue}
-              </Typography>
-            }
-            {currentResource.status === 'running' && (
-              <Typography variant="caption" display="block" color="textSecondary">
-                Em execução
-              </Typography>
-            )}
-          </Grid>
-        </Grid>
-      );
-    }
-
-    return (
-      <Button
-        variant="contained"
-        color="primary"
-        onClick={() => handleOpenModal(row)}
-        disabled={loading}
-      >
-        Executar
-      </Button>
-    );
-  };
+  const renderActionButton = (row: { resourceName: string; resourceType: string }) => (
+    <ResourceActionButton
+      resource={row}
+      buildMenagerState={buildMenagerState}
+      loading={loading}
+      onOpenModal={handleOpenModal}
+      onChangeCurrentBuildView={changeCurrentBuildViewAndFetchLogs}
+    />
+  );
 
   const buildView = currentBuildView ? buildMenagerState[currentBuildView] : undefined;
-
   return (
     <Page themeId="tool">
       <Content>
-        <Grid container spacing={3}>
+        <Grid container spacing={3} style={{ marginTop: theme.spacing(3) }}>
           <Grid item xs={6}>
             <ResourceTable
               combinedData={combinedData}
@@ -159,18 +97,7 @@ export const AzureServiceBusContent = () => {
             <InfoCard
               title={
                 buildView ? (
-                  <Grid container justifyContent="space-between" alignItems="center">
-                    <Grid item>
-                      <Typography>
-                        Logs do Build #{buildView.buildId} = {currentBuildView}
-                      </Typography>
-                    </Grid>
-                    <Grid item>
-                      <Typography>
-                        Status: {buildView.status}
-                      </Typography>
-                    </Grid>
-                  </Grid>
+                  <InfoCardTitle buildView={buildView} />
                 ) : 'Logs do Build'
               }
             >

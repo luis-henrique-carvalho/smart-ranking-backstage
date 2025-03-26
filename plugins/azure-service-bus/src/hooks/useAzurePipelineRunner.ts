@@ -2,10 +2,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { AzureServiceBusApiRef } from '../api';
 import { useApi } from '@backstage/core-plugin-api';
-import { BuildLogFull, PipelineParams } from '../types';
-
-type QueueStatus = 'queued' | 'running' | 'completed';
-type ResourceType = 'queue' | 'topic';
+import { BuildItem, BuildLogFull, PipelineParams } from '../types';
 
 export interface useAzurePipelineRunnerReturn {
   loading: boolean;
@@ -17,13 +14,6 @@ export interface useAzurePipelineRunnerReturn {
   completeRumBuild: (resourceName: string) => Promise<void>;
   triggerPipeline: (data: PipelineParams) => Promise<void>;
   changeCurrentBuildViewAndFetchLogs: (resourceName: string) => void;
-}
-
-interface BuildItem {
-  resourceType: ResourceType;
-  buildId: number;
-  status: QueueStatus;
-  timestamp: number;
 }
 
 type BuildMenagerState = Record<string, BuildItem>;
@@ -67,15 +57,13 @@ export const useAzurePipelineRunner = (): useAzurePipelineRunnerReturn => {
     setBuildMenagerState(prevState => {
       const newState = { ...prevState };
 
-      // Atualiza ou adiciona cada item de newBuild ao estado atual
       Object.entries(newBuild).forEach(([resourceName, newItem]) => {
         newState[resourceName] = {
-          ...prevState[resourceName], // Mantém os dados existentes, se houver
-          ...newItem, // Sobrescreve apenas os campos fornecidos em newBuild
+          ...prevState[resourceName],
+          ...newItem,
         };
       });
 
-      // Atualiza o localStorage
       localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(newState));
       return newState;
     });
@@ -129,8 +117,8 @@ export const useAzurePipelineRunner = (): useAzurePipelineRunnerReturn => {
     }
   };
 
-  const fetchBuildLogsDetails = async (buildId: number) => {
-    setLoading(true); // Set loading to true before fetching logs
+  const fetchCompletedBuildLogsDetails = async (buildId: number) => {
+    setLoading(true);
     try {
       const logs = await azureServiceBusApi.fetchBuildLogs(buildId);
 
@@ -152,7 +140,7 @@ export const useAzurePipelineRunner = (): useAzurePipelineRunnerReturn => {
     } catch (err) {
       setError('Erro ao buscar logs');
     } finally {
-      setLoading(false); // Set loading to false after fetching logs
+      setLoading(false);
     }
   };
 
@@ -166,12 +154,11 @@ export const useAzurePipelineRunner = (): useAzurePipelineRunnerReturn => {
     setCurrentBuildView(resourceName);
 
     if (buildMenagerState[resourceName]) {
-      fetchBuildLogsDetails(buildMenagerState[resourceName].buildId);
+      fetchCompletedBuildLogsDetails(buildMenagerState[resourceName].buildId);
     }
   };
 
   useEffect(() => {
-    // so continue caso hája buildMenagerState em execução ou na fila
     if (
       !Object.values(buildMenagerState).some(
         q => q.status === 'queued' || q.status === 'running',
@@ -180,9 +167,8 @@ export const useAzurePipelineRunner = (): useAzurePipelineRunnerReturn => {
       return;
     }
 
-    // atualiza o status de todos os builds baseado na resposta da API com o await azureServiceBusApi.fetchBuildById(buildId); usando promise.all
     const fetchBuilds = async () => {
-      setLoading(true); // Set loading to true before fetching builds
+      setLoading(true);
       try {
         await Promise.all(
           Object.entries(buildMenagerState)
@@ -207,7 +193,7 @@ export const useAzurePipelineRunner = (): useAzurePipelineRunnerReturn => {
               }
 
               if (currentBuildView === resourceName) {
-                fetchBuildLogsDetails(
+                fetchCompletedBuildLogsDetails(
                   buildMenagerState[currentBuildView].buildId,
                 );
               }
@@ -227,6 +213,7 @@ export const useAzurePipelineRunner = (): useAzurePipelineRunnerReturn => {
     }, 5000);
 
     return () => clearInterval(interval);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [buildMenagerState, currentBuildView, azureServiceBusApi]);
 
   return {

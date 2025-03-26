@@ -34,3 +34,13 @@ export interface BuildLogFull {
   id: number;
   value: string[];
 }
+
+export interface BuildItem {
+  resourceType: ResourceType;
+  buildId: number;
+  status: QueueStatus;
+  timestamp: number;
+}
+
+type QueueStatus = 'queued' | 'running' | 'completed';
+type ResourceType = 'queue' | 'topic';

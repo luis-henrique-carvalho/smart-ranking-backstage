@@ -3,6 +3,7 @@ import { Button, CardContent, Typography, makeStyles } from "@material-ui/core";
 import { LogViewer } from "@backstage/core-components";
 import { BuildLogFull } from "../../../types";
 import ArrowDownward from "@material-ui/icons/ArrowDownward"; // Importe o ícone
+import Skeleton from "@material-ui/lab/Skeleton"; // Importe o Skeleton
 
 interface BuildLogsProps {
     buildLogsDetails: BuildLogFull[] | null;
@@ -27,6 +28,10 @@ const BuildLogs: React.FC<BuildLogsProps> = ({ buildLogsDetails }) => {
         }
     };
 
+    if (!buildLogsDetails) {
+        return <Skeleton variant="rect" width="100%" height="60vh" />;
+    }
+
     if (!buildLogsDetails || buildLogsDetails.length === 0) {
         return <Typography color="textSecondary">Nenhum log disponível</Typography>;
     }
@@ -35,7 +40,7 @@ const BuildLogs: React.FC<BuildLogsProps> = ({ buildLogsDetails }) => {
         <CardContent>
             <div
                 style={{
-                    height: "60vh",
+                    minHeight: "60vh",
                 }}
             >
                 <LogViewer
