@@ -91,6 +91,11 @@ export const useAzurePipelineRunner = (): useAzurePipelineRunnerReturn => {
     });
   };
 
+  const clearLogsForResource = (resourceName: string) => {
+    setBuildLogsDetails([]);
+    logsRefByBuildId.current.delete(resourceName);
+  };
+
   const triggerPipeline = async (data: PipelineParams): Promise<void> => {
     setLoading(true);
     setError(null);
@@ -98,8 +103,7 @@ export const useAzurePipelineRunner = (): useAzurePipelineRunnerReturn => {
     try {
       const build = await azureServiceBusApi.triggerPipeline(data);
 
-      setBuildLogsDetails([]);
-      logsRefByBuildId.current.delete(data.resource_name);
+      clearLogsForResource(data.resource_name);
       setCurrentBuildView(data.resource_name);
 
       updateBuildState({
@@ -117,16 +121,30 @@ export const useAzurePipelineRunner = (): useAzurePipelineRunnerReturn => {
     }
   };
 
-  const fetchCompletedBuildLogsDetails = async (buildId: number) => {
+  const fetchBuildLogsDetails = async (
+    buildId: number,
+    resourceName: string,
+  ) => {
     setLoading(true);
     try {
       const logs = await azureServiceBusApi.fetchBuildLogs(buildId);
 
       if (logs?.value?.length) {
         const detailedLogs = await Promise.all(
-          logs.value.map(log =>
-            azureServiceBusApi.fetchLogById(log.id, buildId),
-          ),
+          logs.value.map(log => {
+            const existingLogs =
+              logsRefByBuildId.current.get(resourceName) || [];
+
+            if (!existingLogs.includes(log.id)) {
+              logsRefByBuildId.current.set(resourceName, [
+                ...existingLogs,
+                log.id,
+              ]);
+              return azureServiceBusApi.fetchLogById(log.id, buildId);
+            }
+
+            return null;
+          }),
         );
 
         const filteredLogs = detailedLogs.filter(
@@ -134,7 +152,7 @@ export const useAzurePipelineRunner = (): useAzurePipelineRunnerReturn => {
         ) as BuildLogFull[];
 
         if (filteredLogs.length > 0) {
-          setBuildLogsDetails(filteredLogs);
+          setBuildLogsDetails(prev => [...prev, ...filteredLogs]);
         }
       }
     } catch (err) {
@@ -145,16 +163,14 @@ export const useAzurePipelineRunner = (): useAzurePipelineRunnerReturn => {
   };
 
   const changeCurrentBuildViewAndFetchLogs = (resourceName: string) => {
-    setBuildLogsDetails([]);
-
-    if (buildMenagerState[resourceName].status === 'completed') {
-      logsRefByBuildId.current.delete(resourceName);
-    }
-
+    clearLogsForResource(resourceName);
     setCurrentBuildView(resourceName);
 
     if (buildMenagerState[resourceName]) {
-      fetchCompletedBuildLogsDetails(buildMenagerState[resourceName].buildId);
+      fetchBuildLogsDetails(
+        buildMenagerState[resourceName].buildId,
+        resourceName,
+      );
     }
   };
 
@@ -178,24 +194,23 @@ export const useAzurePipelineRunner = (): useAzurePipelineRunnerReturn => {
                 content.buildId,
               );
 
-              if (build) {
-                if (build.status === 'inProgress') {
-                  if (content.status !== 'running') {
-                    startRumBuild(resourceName);
-                  }
-                }
+              if (!build) {
+                return;
+              }
 
-                if (build.status === 'completed') {
-                  if (content.status !== 'completed') {
-                    completeRumBuild(resourceName);
-                  }
-                }
+              const isInProgress = build.status === 'inProgress';
+              const isCompleted = build.status === 'completed';
+
+              if (isInProgress && content.status !== 'running') {
+                startRumBuild(resourceName);
+              }
+
+              if (isCompleted && content.status !== 'completed') {
+                completeRumBuild(resourceName);
               }
 
               if (currentBuildView === resourceName) {
-                fetchCompletedBuildLogsDetails(
-                  buildMenagerState[currentBuildView].buildId,
-                );
+                fetchBuildLogsDetails(content.buildId, resourceName);
               }
             }),
         );
