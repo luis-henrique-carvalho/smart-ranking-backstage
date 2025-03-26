@@ -28,6 +28,7 @@ export const AzureServiceBusContent = () => {
     currentBuildView,
     changeCurrentBuildViewAndFetchLogs,
     buildMenagerState,
+    cancelBuild,
   } = useAzurePipelineRunner();
 
   const config = useApi(configApiRef);
@@ -79,6 +80,7 @@ export const AzureServiceBusContent = () => {
       loading={loading}
       onOpenModal={handleOpenModal}
       onChangeCurrentBuildView={changeCurrentBuildViewAndFetchLogs}
+      onCancelBuild={cancelBuild}
     />
   );
 
@@ -87,13 +89,13 @@ export const AzureServiceBusContent = () => {
     <Page themeId="tool">
       <Content>
         <Grid container spacing={3} style={{ marginTop: theme.spacing(3) }}>
-          <Grid item xs={6}>
+          <Grid item xs={7}>
             <ResourceTable
               combinedData={combinedData}
               renderActionButton={renderActionButton}
             />
           </Grid>
-          <Grid item xs={6}>
+          <Grid item xs={5}>
             <InfoCard
               title={
                 buildView ? (

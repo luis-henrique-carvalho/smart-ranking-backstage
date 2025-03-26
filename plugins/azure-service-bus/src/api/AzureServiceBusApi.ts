@@ -1,6 +1,6 @@
 import { ConfigApi, createApiRef } from '@backstage/core-plugin-api';
 import {
-  Build,
+  BuildType,
   BuildLogDetailsType,
   BuildLogsResponse,
   PipelineParamsType,
@@ -11,10 +11,11 @@ export const AzureServiceBusApiRef = createApiRef<AzureServiceBusApi>({
 });
 
 export interface AzureServiceBusApi {
-  triggerPipeline(pipeline_params: PipelineParamsType): Promise<Build>;
+  triggerPipeline(pipeline_params: PipelineParamsType): Promise<BuildType>;
   fetchBuildLogs(buildId: number): Promise<BuildLogsResponse>;
   fetchLogById(logId: number, buildId: number): Promise<BuildLogDetailsType>;
-  fetchBuildById(buildId: number): Promise<Build | null>;
+  fetchBuildById(buildId: number): Promise<BuildType | null>;
+  cancelBuild(buildId: number): Promise<BuildType>;
 }
 
 export class AzureServiceBusApiClient implements AzureServiceBusApi {
@@ -61,7 +62,7 @@ export class AzureServiceBusApiClient implements AzureServiceBusApi {
     return this.fetchFromAzure(url);
   }
 
-  async fetchBuildById(buildId: number): Promise<Build | null> {
+  async fetchBuildById(buildId: number): Promise<BuildType | null> {
     const url = `https://dev.azure.com/${this.organization}/${this.project}/_apis/build/builds/${buildId}?api-version=7.1`;
 
     return this.fetchFromAzure(url);
@@ -76,7 +77,35 @@ export class AzureServiceBusApiClient implements AzureServiceBusApi {
     return this.fetchFromAzure(url);
   }
 
-  async triggerPipeline(pipeline_params: PipelineParamsType): Promise<Build> {
+  async cancelBuild(buildId: number): Promise<BuildType> {
+    const url = `https://dev.azure.com/${this.organization}/${this.project}/_apis/build/builds/${buildId}?api-version=7.1`;
+
+    try {
+      const resp = await fetch(url, {
+        method: 'PATCH',
+        headers: this.getHeaders(),
+        body: JSON.stringify({ status: 'cancelling' }),
+      });
+
+      if (!resp.ok) {
+        throw new Error(`Erro na API: ${resp.status} - ${resp.statusText}`);
+      }
+
+      const build = await resp.json();
+
+      if (build.status !== 'cancelling') {
+        throw new Error('Falha ao cancelar build');
+      }
+
+      return build;
+    } catch (error) {
+      throw new Error(`Falha ao cancelar build: ${this.formatError(error)}`);
+    }
+  }
+
+  async triggerPipeline(
+    pipeline_params: PipelineParamsType,
+  ): Promise<BuildType> {
     if (!this.pipelineUrl) {
       throw new Error('Erro de configuração: "pipelineUrl" não foi definido.');
     }

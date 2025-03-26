@@ -14,10 +14,9 @@ export interface useAzurePipelineRunnerReturn {
   buildLogsDetails: BuildLogDetailsType[];
   buildMenagerState: Record<string, BuildItemType>;
   currentBuildView: string | null;
-  startRumBuild: (resourceName: string) => Promise<void>;
-  completeRumBuild: (resourceName: string) => Promise<void>;
   triggerPipeline: (data: PipelineParamsType) => Promise<void>;
   changeCurrentBuildViewAndFetchLogs: (resourceName: string) => void;
+  cancelBuild: (resourceName: string) => Promise<void>;
 }
 
 type BuildMenagerStateType = Record<string, BuildItemType>;
@@ -60,7 +59,7 @@ export const useAzurePipelineRunner = (): useAzurePipelineRunnerReturn => {
     });
   };
 
-  const startRumBuild = async (resourceName: string): Promise<void> => {
+  const startBuild = async (resourceName: string): Promise<void> => {
     const buildItem = buildMenagerState[resourceName];
 
     updateBuildState({
@@ -71,7 +70,7 @@ export const useAzurePipelineRunner = (): useAzurePipelineRunnerReturn => {
     });
   };
 
-  const completeRumBuild = async (resourceName: string): Promise<void> => {
+  const completeBuild = async (resourceName: string): Promise<void> => {
     const buildItem = buildMenagerState[resourceName];
 
     updateBuildState({
@@ -165,6 +164,25 @@ export const useAzurePipelineRunner = (): useAzurePipelineRunnerReturn => {
     }
   };
 
+  const cancelBuild = async (resourceName: string) => {
+    setLoading(true);
+    setError(null);
+
+    const buildItem = buildMenagerState[resourceName];
+
+    if (buildItem.status !== 'completed') {
+      try {
+        await azureServiceBusApi.cancelBuild(buildItem.buildId);
+
+        completeBuild(resourceName);
+      } catch (err) {
+        setError('Erro ao cancelar build');
+      } finally {
+        setLoading(false);
+      }
+    }
+  };
+
   useEffect(() => {
     if (
       !Object.values(buildMenagerState).some(
@@ -193,11 +211,11 @@ export const useAzurePipelineRunner = (): useAzurePipelineRunnerReturn => {
               const isCompleted = buildResp.status === 'completed';
 
               if (isInProgress && content.status !== 'running') {
-                startRumBuild(resourceName);
+                startBuild(resourceName);
               }
 
               if (isCompleted && content.status !== 'completed') {
-                completeRumBuild(resourceName);
+                completeBuild(resourceName);
               }
 
               if (currentBuildView === resourceName) {
@@ -227,10 +245,9 @@ export const useAzurePipelineRunner = (): useAzurePipelineRunnerReturn => {
     error,
     buildLogsDetails,
     currentBuildView,
-    startRumBuild,
     changeCurrentBuildViewAndFetchLogs,
     buildMenagerState,
-    completeRumBuild,
     triggerPipeline,
+    cancelBuild,
   };
 };
