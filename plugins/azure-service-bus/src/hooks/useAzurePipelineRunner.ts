@@ -90,7 +90,6 @@ export const useAzurePipelineRunner = (): useAzurePipelineRunnerReturn => {
     buildId: number,
     resourceName: string,
   ) => {
-    setLoading(true);
     try {
       const logs = await azureServiceBusApi.fetchBuildLogs(buildId);
 
@@ -122,8 +121,6 @@ export const useAzurePipelineRunner = (): useAzurePipelineRunnerReturn => {
       }
     } catch (err) {
       setError('Erro ao buscar logs');
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -193,7 +190,6 @@ export const useAzurePipelineRunner = (): useAzurePipelineRunnerReturn => {
     }
 
     const fetchBuilds = async () => {
-      setLoading(true);
       try {
         await Promise.all(
           Object.entries(buildMenagerState)
@@ -225,8 +221,6 @@ export const useAzurePipelineRunner = (): useAzurePipelineRunnerReturn => {
         );
       } catch (err) {
         setError('Erro ao buscar builds');
-      } finally {
-        setLoading(false);
       }
     };
 
