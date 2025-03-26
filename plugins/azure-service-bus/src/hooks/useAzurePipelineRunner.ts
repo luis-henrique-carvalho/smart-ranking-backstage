@@ -130,10 +130,9 @@ export const useAzurePipelineRunner = (): useAzurePipelineRunnerReturn => {
   };
 
   const fetchBuildLogsDetails = async (buildId: number) => {
+    setLoading(true); // Set loading to true before fetching logs
     try {
       const logs = await azureServiceBusApi.fetchBuildLogs(buildId);
-
-      console.log('fetchBuildLogsDetails', logs.count);
 
       if (logs?.value?.length) {
         const detailedLogs = await Promise.all(
@@ -152,6 +151,8 @@ export const useAzurePipelineRunner = (): useAzurePipelineRunnerReturn => {
       }
     } catch (err) {
       setError('Erro ao buscar logs');
+    } finally {
+      setLoading(false); // Set loading to false after fetching logs
     }
   };
 
@@ -181,40 +182,42 @@ export const useAzurePipelineRunner = (): useAzurePipelineRunnerReturn => {
 
     // atualiza o status de todos os builds baseado na resposta da API com o await azureServiceBusApi.fetchBuildById(buildId); usando promise.all
     const fetchBuilds = async () => {
-      console.log('fetchBuilds');
-
-      await Promise.all(
-        Object.entries(buildMenagerState)
-          .filter(([, q]) => q.status === 'queued' || q.status === 'running')
-          .map(async ([resourceName, content]) => {
-            const build = await azureServiceBusApi.fetchBuildById(
-              content.buildId,
-            );
-
-            if (build) {
-              console.log('build', build.status);
-              if (build.status === 'inProgress') {
-                if (content.status !== 'running') {
-                  startRumBuild(resourceName);
-                }
-              }
-
-              if (build.status === 'completed') {
-                if (content.status !== 'completed') {
-                  completeRumBuild(resourceName);
-                }
-              }
-            }
-
-            console.log('currentBuildView', currentBuildView);
-
-            if (currentBuildView === resourceName) {
-              fetchBuildLogsDetails(
-                buildMenagerState[currentBuildView].buildId,
+      setLoading(true); // Set loading to true before fetching builds
+      try {
+        await Promise.all(
+          Object.entries(buildMenagerState)
+            .filter(([, q]) => q.status === 'queued' || q.status === 'running')
+            .map(async ([resourceName, content]) => {
+              const build = await azureServiceBusApi.fetchBuildById(
+                content.buildId,
               );
-            }
-          }),
-      );
+
+              if (build) {
+                if (build.status === 'inProgress') {
+                  if (content.status !== 'running') {
+                    startRumBuild(resourceName);
+                  }
+                }
+
+                if (build.status === 'completed') {
+                  if (content.status !== 'completed') {
+                    completeRumBuild(resourceName);
+                  }
+                }
+              }
+
+              if (currentBuildView === resourceName) {
+                fetchBuildLogsDetails(
+                  buildMenagerState[currentBuildView].buildId,
+                );
+              }
+            }),
+        );
+      } catch (err) {
+        setError('Erro ao buscar builds');
+      } finally {
+        setLoading(false);
+      }
     };
 
     fetchBuilds();
