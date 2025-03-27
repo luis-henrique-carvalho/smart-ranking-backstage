@@ -41,7 +41,7 @@ export const ResourceActionButton: React.FC<ResourceActionButtonProps> = ({
                         disabled={loading}
                         style={{ minWidth: '100%' }}
                     >
-                        Executar
+                        Execute
                     </Button>
                 </Grid>
             </Grid>
