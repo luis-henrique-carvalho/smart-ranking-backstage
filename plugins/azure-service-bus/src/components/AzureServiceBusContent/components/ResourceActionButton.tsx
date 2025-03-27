@@ -60,7 +60,7 @@ export const ResourceActionButton: React.FC<ResourceActionButtonProps> = ({
                             disabled={loading}
                             style={{ width: '100%' }}
                         >
-                            Executar
+                            Run
                         </Button>
                     </Grid>
                     <Grid item xs={6}>
@@ -70,7 +70,7 @@ export const ResourceActionButton: React.FC<ResourceActionButtonProps> = ({
                             onClick={() => onChangeCurrentBuildView(resource.resourceName)}
                             style={{ width: '100%' }}
                         >
-                            Ver Logs
+                            Show Logs
                         </Button>
                     </Grid>
                 </Grid>
@@ -83,12 +83,12 @@ export const ResourceActionButton: React.FC<ResourceActionButtonProps> = ({
                             onClick={() => onChangeCurrentBuildView(resource.resourceName)}
                             startIcon={
                                 currentResource.status === 'running' && (
-                                    <CircularProgress size={20} style={{ color: theme.palette.text.secondary }} />
+                                    <CircularProgress size={20} style={{ color: 'black' }} />
                                 )
                             }
                             style={{ width: '100%' }}
                         >
-                            {currentResource.status === 'running' ? 'Executando' : 'Aguardando'}
+                            {currentResource.status === 'running' ? 'Running' : 'not Started'}
                         </Button>
                     </Grid>
                     <Grid item xs={6}>
@@ -99,14 +99,14 @@ export const ResourceActionButton: React.FC<ResourceActionButtonProps> = ({
                             disabled={loading}
                             style={{ width: '100%' }}
                         >
-                            Cancelar
+                            Cancel
                         </Button>
                     </Grid>
                 </Grid>
             )}
-            {totalInQueue > 0 && (
+            {totalInQueue > 0 && currentResource.status === "running" && (
                 <Typography variant="body2" color="textSecondary" style={{ marginTop: '8px' }}>
-                    Total na fila: {totalInQueue}
+                    Total in queue: {totalInQueue}
                 </Typography>
             )}
         </Box>

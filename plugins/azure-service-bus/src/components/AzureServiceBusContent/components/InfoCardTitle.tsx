@@ -9,7 +9,7 @@ const InfoCardTitle = ({ buildView }: InfoCardTitleProps) => {
     return (
         <Grid container justifyContent="space-between" alignItems="center">
             <Grid item>
-                <Typography variant="h6">Logs do Build #{buildView.buildId}</Typography>
+                <Typography variant="h6">Build Logs: #{buildView.buildId}</Typography>
             </Grid>
             <Grid item>
                 <Typography variant="body2" color="textSecondary">

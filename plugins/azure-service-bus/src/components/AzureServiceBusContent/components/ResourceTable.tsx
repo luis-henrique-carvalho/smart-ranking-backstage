@@ -33,7 +33,7 @@ export const ResourceTable: React.FC<ResourceTableProps> = ({ combinedData, rend
             }}
             data={combinedData}
             columns={columns}
-            title="Filas e Tópicos"
+            title="Queues and Topics"
         />
     );
 };

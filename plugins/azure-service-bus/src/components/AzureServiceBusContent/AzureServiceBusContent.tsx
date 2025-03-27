@@ -116,6 +116,7 @@ export const AzureServiceBusContent = () => {
             serviceName={serviceName}
             resourceType={selectedResource.resourceType}
             resourceName={selectedResource.resourceName}
+            isLoading={loading}
           />
         </ReprocessModal>
       )}
