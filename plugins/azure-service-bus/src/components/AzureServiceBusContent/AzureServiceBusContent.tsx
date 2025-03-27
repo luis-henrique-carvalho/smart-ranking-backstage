@@ -86,40 +86,40 @@ export const AzureServiceBusContent = () => {
 
   const buildView = currentBuildView ? buildMenagerState[currentBuildView] : undefined;
   return (
-    <Page themeId="tool">
-      <Content>
-        <Grid container spacing={3} style={{ marginTop: theme.spacing(3) }}>
-          <Grid item xs={7}>
-            <ResourceTable
-              combinedData={combinedData}
-              renderActionButton={renderActionButton}
-            />
-          </Grid>
-          <Grid item xs={5}>
-            <InfoCard
-              title={
-                buildView ? (
-                  <InfoCardTitle buildView={buildView} />
-                ) : 'Logs do Build'
-              }
-            >
-              {buildLogsDetails && <BuildLogs buildLogsDetails={buildLogsDetails} />}
-            </InfoCard>
-          </Grid>
-        </Grid>
-      </Content>
-
-      {selectedResource && (
-        <ReprocessModal open={modalOpen} onClose={handleCloseModal} title="Reprocessar Dead Letter">
-          <ReprocessForm
-            onSubmit={handleSubmit}
-            serviceName={serviceName}
-            resourceType={selectedResource.resourceType}
-            resourceName={selectedResource.resourceName}
-            isLoading={loading}
+    <Grid container>
+      <Grid container spacing={3}>
+        <Grid item xs={7}>
+          <ResourceTable
+            combinedData={combinedData}
+            renderActionButton={renderActionButton}
           />
-        </ReprocessModal>
-      )}
+        </Grid>
+        <Grid item xs={5}>
+          <InfoCard
+            title={
+              buildView ? (
+                <InfoCardTitle buildView={buildView} />
+              ) : 'Logs do Build'
+            }
+          >
+            {buildLogsDetails && <BuildLogs buildLogsDetails={buildLogsDetails} isLoading={loading} />}
+          </InfoCard>
+        </Grid>
+      </Grid>
+
+      {
+        selectedResource && (
+          <ReprocessModal open={modalOpen} onClose={handleCloseModal} title="Reprocessar Dead Letter">
+            <ReprocessForm
+              onSubmit={handleSubmit}
+              serviceName={serviceName}
+              resourceType={selectedResource.resourceType}
+              resourceName={selectedResource.resourceName}
+              isLoading={loading}
+            />
+          </ReprocessModal>
+        )
+      }
 
       <Snackbar
         open={alertOpen}
@@ -134,6 +134,6 @@ export const AzureServiceBusContent = () => {
           {alertMessage}
         </Alert>
       </Snackbar>
-    </Page>
+    </Grid >
   );
 };
