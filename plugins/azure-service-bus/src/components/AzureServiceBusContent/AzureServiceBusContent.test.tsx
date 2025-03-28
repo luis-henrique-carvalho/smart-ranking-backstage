@@ -41,7 +41,7 @@ describe('AzureServiceBusContent', () => {
 
     afterEach(() => {
         jest.clearAllMocks();
-    })
+    });
 
     const renderComponent = (annotations: Record<string, string> = {}) => {
         render(
@@ -61,188 +61,266 @@ describe('AzureServiceBusContent', () => {
             </ApiProvider>,
         );
     };
-    it('should render both queues and topics when both annotations are provided', () => {
-        renderComponent({
-            'azure-service-bus/queues': 'queue1,queue2',
-            'azure-service-bus/topics': 'topic1,topic2',
+
+    describe('Rendering', () => {
+        it('should render both queues and topics when both annotations are provided', () => {
+            renderComponent({
+                'azure-service-bus/queues': 'queue1,queue2',
+                'azure-service-bus/topics': 'topic1,topic2',
+            });
+
+            expect(screen.getByText('queue1')).toBeInTheDocument();
+            expect(screen.getByText('queue2')).toBeInTheDocument();
+            expect(screen.getByText('topic1')).toBeInTheDocument();
+            expect(screen.getByText('topic2')).toBeInTheDocument();
         });
 
-        expect(screen.getByText('queue1')).toBeInTheDocument();
-        expect(screen.getByText('queue2')).toBeInTheDocument();
-        expect(screen.getByText('topic1')).toBeInTheDocument();
-        expect(screen.getByText('topic2')).toBeInTheDocument();
-    });
+        it('should render the correct message when no annotations are provided', () => {
+            renderComponent();
 
-    it('should render the correct message when no annotations are provided', () => {
-        renderComponent();
-
-        expect(screen.getByText(/Missing Annotation/i)).toBeInTheDocument();
-    });
-
-    it('should render the resource table and logs section when annotations are provided', () => {
-        renderComponent({
-            'azure-service-bus/queues': 'queue1,queue2',
-            'azure-service-bus/topics': 'topic1',
+            expect(screen.getByText(/Missing Annotation/i)).toBeInTheDocument();
         });
 
-        expect(screen.getByText('Logs do Build')).toBeInTheDocument();
-        expect(screen.getByText('queue1')).toBeInTheDocument();
-        expect(screen.getByText('queue2')).toBeInTheDocument();
-        expect(screen.getByText('topic1')).toBeInTheDocument();
-    });
+        it('should render the resource table and logs section when annotations are provided', () => {
+            renderComponent({
+                'azure-service-bus/queues': 'queue1,queue2',
+                'azure-service-bus/topics': 'topic1',
+            });
 
-    it('should render the resource table and logs section when only queues are provided', () => {
-        renderComponent({
-            'azure-service-bus/queues': 'queue1,queue2',
+            expect(screen.getByText('Logs do Build')).toBeInTheDocument();
+            expect(screen.getByText('queue1')).toBeInTheDocument();
+            expect(screen.getByText('queue2')).toBeInTheDocument();
+            expect(screen.getByText('topic1')).toBeInTheDocument();
         });
 
-        expect(screen.getByText('Logs do Build')).toBeInTheDocument();
-        expect(screen.getByText('queue1')).toBeInTheDocument();
-        expect(screen.getByText('queue2')).toBeInTheDocument();
+        it('should render the resource table and logs section when only queues are provided', () => {
+            renderComponent({
+                'azure-service-bus/queues': 'queue1,queue2',
+            });
+
+            expect(screen.getByText('Logs do Build')).toBeInTheDocument();
+            expect(screen.getByText('queue1')).toBeInTheDocument();
+            expect(screen.getByText('queue2')).toBeInTheDocument();
+        });
     });
 
-    it('should correctly handle annotations for queues and topics', () => {
-        const annotations = {
-            'azure-service-bus/queues': 'queue1,queue2',
-            'azure-service-bus/topics': 'topic1,topic2',
-        };
-
-        renderComponent(annotations);
-
-        expect(screen.getByText('queue1')).toBeInTheDocument();
-        expect(screen.getByText('queue2')).toBeInTheDocument();
-        expect(screen.getByText('topic1')).toBeInTheDocument();
-        expect(screen.getByText('topic2')).toBeInTheDocument();
-    });
-
-    it('should display the buildView correctly in InfoCardTitle', () => {
-        (useAzurePipelineRunner as jest.Mock).mockReturnValue({
-            loading: false,
-            triggerPipeline: jest.fn(),
-            buildLogsDetails: [],
-            currentBuildView: 'queue1',
-            changeCurrentBuildViewAndFetchLogs: jest.fn(),
-            buildManagerState: { // Corrigido para buildManagerState
-                queue1: {
-                    buildId: 123,
-                    status: 'running',
+    describe('Build View', () => {
+        it('should display the buildView correctly in InfoCardTitle', () => {
+            (useAzurePipelineRunner as jest.Mock).mockReturnValue({
+                loading: false,
+                triggerPipeline: jest.fn(),
+                buildLogsDetails: [],
+                currentBuildView: 'queue1',
+                changeCurrentBuildViewAndFetchLogs: jest.fn(),
+                buildManagerState: {
+                    queue1: {
+                        buildId: 123,
+                        status: 'running',
+                    },
                 },
-            },
-            cancelBuild: jest.fn(),
-        });
+                cancelBuild: jest.fn(),
+            });
 
-        renderComponent({
-            'azure-service-bus/queues': 'queue1',
-        });
+            renderComponent({
+                'azure-service-bus/queues': 'queue1',
+            });
 
-        expect(screen.getByText('Build Logs: #123')).toBeInTheDocument();
-        expect(screen.getByText('Status: running')).toBeInTheDocument();
+            expect(screen.getByText('Build Logs: #123')).toBeInTheDocument();
+            expect(screen.getByText('Status: running')).toBeInTheDocument();
+        });
     });
 
-    it('should open the modal when the action button is clicked', async () => {
-        renderComponent({
-            'azure-service-bus/queues': 'queue1',
+    describe('Modal Behavior', () => {
+        it('should open the modal when the action button is clicked', async () => {
+            renderComponent({
+                'azure-service-bus/queues': 'queue1',
+            });
+
+            fireEvent.click(screen.getByText('Execute'));
+
+            await waitFor(() => {
+                expect(screen.getByText('Reprocessar Dead Letter')).toBeInTheDocument();
+            });
         });
 
-        fireEvent.click(screen.getByText('Execute'));
+        it('should trigger the pipeline when the modal is submitted', async () => {
+            renderComponent({
+                'azure-service-bus/queues': 'queue1',
+            });
 
-        await waitFor(() => {
-            expect(screen.getByText('Reprocessar Dead Letter')).toBeInTheDocument();
-        })
-    })
+            fireEvent.click(screen.getByText('Execute'));
 
-    it("should trigger the pipeline when the modal is submitted", async () => {
-        renderComponent({
-            'azure-service-bus/queues': 'queue1',
+            fireEvent.click(screen.getByText('Submeter'));
+
+            await waitFor(() => {
+                expect(mockTriggerPipeline).toHaveBeenCalled();
+            });
+
+            expect(screen.getByText('Pipeline disparado com sucesso!')).toBeInTheDocument();
         });
 
-        fireEvent.click(screen.getByText('Execute'));
+        it('should display an error message when handleSubmit fails', async () => {
+            mockTriggerPipeline.mockRejectedValue(new Error('Pipeline error'));
 
-        fireEvent.click(screen.getByText('Submeter'));
+            renderComponent({
+                'azure-service-bus/queues': 'queue1',
+            });
 
-        await waitFor(() => {
-            expect(mockTriggerPipeline).toHaveBeenCalled();
+            fireEvent.click(screen.getByText('Execute'));
+
+            fireEvent.click(screen.getByText('Submeter'));
+
+            await waitFor(() => {
+                expect(mockTriggerPipeline).toHaveBeenCalled();
+            });
+
+            expect(screen.getByText('Erro: Pipeline error')).toBeInTheDocument();
         });
+    });
 
-        expect(screen.getByText('Pipeline disparado com sucesso!')).toBeInTheDocument();
-    })
-
-    it("should cancel the build when the action button is clicked", async () => {
-
-        (useAzurePipelineRunner as jest.Mock).mockReturnValue({
-            loading: false,
-            triggerPipeline: jest.fn(),
-            buildLogsDetails: [],
-            currentBuildView: 'queue1',
-            changeCurrentBuildViewAndFetchLogs: jest.fn(),
-            buildManagerState: {
-                queue1: {
-                    buildId: 123,
-                    status: 'running',
+    describe('Cancel Build', () => {
+        it('should cancel the build when the action button is clicked', async () => {
+            (useAzurePipelineRunner as jest.Mock).mockReturnValue({
+                loading: false,
+                triggerPipeline: jest.fn(),
+                buildLogsDetails: [],
+                currentBuildView: 'queue1',
+                changeCurrentBuildViewAndFetchLogs: jest.fn(),
+                buildManagerState: {
+                    queue1: {
+                        buildId: 123,
+                        status: 'running',
+                    },
                 },
-            },
-            cancelBuild: mockCancelBuild,
+                cancelBuild: mockCancelBuild,
+            });
+
+            renderComponent({
+                'azure-service-bus/queues': 'queue1',
+            });
+
+            fireEvent.click(screen.getByText('Cancel'));
+
+            await waitFor(() => {
+                expect(mockCancelBuild).toHaveBeenCalled();
+            });
+
+            expect(screen.getByText('Build cancelado com sucesso!')).toBeInTheDocument();
         });
 
-        renderComponent({
-            'azure-service-bus/queues': 'queue1',
-        });
+        it('should display an error message when handleCancelBuild fails', async () => {
+            mockCancelBuild.mockRejectedValue(new Error('Cancel error'));
 
-        fireEvent.click(screen.getByText('Cancel'));
-
-        await waitFor(() => {
-            expect(mockCancelBuild).toHaveBeenCalled();
-        });
-
-        expect(screen.getByText('Build cancelado com sucesso!')).toBeInTheDocument();
-    });
-
-    it("should display an error message when handleSubmit fails", async () => {
-        mockTriggerPipeline.mockRejectedValue(new Error("Pipeline error"));
-
-        renderComponent({
-            'azure-service-bus/queues': 'queue1',
-        });
-
-        fireEvent.click(screen.getByText('Execute'));
-
-        fireEvent.click(screen.getByText('Submeter'));
-
-        await waitFor(() => {
-            expect(mockTriggerPipeline).toHaveBeenCalled();
-        });
-
-        expect(screen.getByText('Erro: Pipeline error')).toBeInTheDocument();
-    });
-
-    it("should display an error message when handleCancelBuild fails", async () => {
-        mockCancelBuild.mockRejectedValue(new Error("Cancel error"));
-
-        (useAzurePipelineRunner as jest.Mock).mockReturnValue({
-            loading: false,
-            triggerPipeline: jest.fn(),
-            buildLogsDetails: [],
-            currentBuildView: 'queue1',
-            changeCurrentBuildViewAndFetchLogs: jest.fn(),
-            buildManagerState: {
-                queue1: {
-                    buildId: 123,
-                    status: 'running',
+            (useAzurePipelineRunner as jest.Mock).mockReturnValue({
+                loading: false,
+                triggerPipeline: jest.fn(),
+                buildLogsDetails: [],
+                currentBuildView: 'queue1',
+                changeCurrentBuildViewAndFetchLogs: jest.fn(),
+                buildManagerState: {
+                    queue1: {
+                        buildId: 123,
+                        status: 'running',
+                    },
                 },
-            },
-            cancelBuild: mockCancelBuild,
+                cancelBuild: mockCancelBuild,
+            });
+
+            renderComponent({
+                'azure-service-bus/queues': 'queue1',
+            });
+
+            fireEvent.click(screen.getByText('Cancel'));
+
+            await waitFor(() => {
+                expect(mockCancelBuild).toHaveBeenCalled();
+            });
+
+            expect(screen.getByText('Erro: Cancel error')).toBeInTheDocument();
+        });
+    });
+
+    describe('BuildLogs', () => {
+        it('should render a message when buildLogsDetails is empty', () => {
+            (useAzurePipelineRunner as jest.Mock).mockReturnValue({
+                loading: false,
+                triggerPipeline: jest.fn(),
+                buildLogsDetails: [],
+                currentBuildView: 'queue1',
+                changeCurrentBuildViewAndFetchLogs: jest.fn(),
+                buildManagerState: {},
+                cancelBuild: jest.fn(),
+            });
+
+            renderComponent({
+                'azure-service-bus/queues': 'queue1',
+            });
+
+            expect(screen.getByText('Nenhum log disponível')).toBeInTheDocument();
         });
 
-        renderComponent({
-            'azure-service-bus/queues': 'queue1',
-        });
+        // it('should render logs when buildLogsDetails is provided', () => {
+        //     (useAzurePipelineRunner as jest.Mock).mockReturnValue({
+        //         loading: false,
+        //         triggerPipeline: jest.fn(),
+        //         buildLogsDetails: [
+        //             { value: ['Log line 1', 'Log line 2'] },
+        //             { value: ['Log line 3'] },
+        //         ],
+        //         currentBuildView: 'queue1',
+        //         changeCurrentBuildViewAndFetchLogs: jest.fn(),
+        //         buildManagerState: {
+        //             queue1: {
+        //                 buildId: 123,
+        //                 status: 'running',
+        //             },
+        //         },
+        //         cancelBuild: jest.fn(),
+        //     });
 
-        fireEvent.click(screen.getByText('Cancel'));
+        //     renderComponent({
+        //         'azure-service-bus/queues': 'queue1',
+        //     });
 
-        await waitFor(() => {
-            expect(mockCancelBuild).toHaveBeenCalled();
-        });
+        //     expect(screen.getByText('Log line 1')).toBeInTheDocument();
+        //     expect(screen.getByText('Log line 2')).toBeInTheDocument();
+        //     expect(screen.getByText('Log line 3')).toBeInTheDocument();
+        // });
 
-        expect(screen.getByText('Erro: Cancel error')).toBeInTheDocument();
+        // it('should scroll to the bottom when the scroll button is clicked', () => {
+        //     (useAzurePipelineRunner as jest.Mock).mockReturnValue({
+        //         loading: false,
+        //         triggerPipeline: jest.fn(),
+        //         buildLogsDetails: [
+        //             { value: ['Log line 1', 'Log line 2'] },
+        //         ],
+        //         currentBuildView: 'queue1',
+        //         changeCurrentBuildViewAndFetchLogs: jest.fn(),
+        //         buildManagerState: {
+        //             queue1: {
+        //                 buildId: 123,
+        //                 status: 'running',
+        //             },
+        //         },
+        //         cancelBuild: jest.fn(),
+        //     });
+
+        //     renderComponent({
+        //         'azure-service-bus/queues': 'queue1',
+        //     });
+
+        //     const scrollToMock = jest.fn();
+        //     const logViewerDiv = document.querySelector('div[class^="BackstageLogViewer-log-"]');
+        //     if (logViewerDiv) {
+        //         logViewerDiv.scrollTo = scrollToMock;
+        //     }
+
+        //     fireEvent.click(screen.getByRole('button', { name: /arrow_downward/i }));
+
+        //     expect(scrollToMock).toHaveBeenCalledWith({
+        //         top: logViewerDiv?.scrollHeight,
+        //         behavior: 'smooth',
+        //     });
+        // });
     });
 });
