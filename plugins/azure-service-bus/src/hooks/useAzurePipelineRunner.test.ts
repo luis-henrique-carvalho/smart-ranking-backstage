@@ -49,7 +49,7 @@ describe('useAzurePipelineRunner', () => {
         loading: false,
         error: null,
         buildLogsDetails: [],
-        buildMenagerState: {},
+        buildManagerState: {},
         currentBuildView: null,
         triggerPipeline: expect.any(Function),
         changeCurrentBuildViewAndFetchLogs: expect.any(Function),
@@ -68,7 +68,7 @@ describe('useAzurePipelineRunner', () => {
 
       const { result } = renderHook(() => useAzurePipelineRunner());
 
-      expect(result.current.buildMenagerState).toEqual(mockData);
+      expect(result.current.buildManagerState).toEqual(mockData);
     });
 
     it('should filter out expired items from localStorage', () => {
@@ -84,7 +84,7 @@ describe('useAzurePipelineRunner', () => {
 
       const { result } = renderHook(() => useAzurePipelineRunner());
 
-      expect(result.current.buildMenagerState).toEqual({
+      expect(result.current.buildManagerState).toEqual({
         resource2: mockData.resource2,
       });
     });
@@ -115,7 +115,7 @@ describe('useAzurePipelineRunner', () => {
       });
 
       expect(mockTriggerPipeline).toHaveBeenCalledWith(mockPipelineData);
-      expect(result.current.buildMenagerState).toEqual({
+      expect(result.current.buildManagerState).toEqual({
         [mockPipelineData.resource_name]: {
           resourceType: mockPipelineData.resource_type,
           buildId: mockBuildResponse.id,
@@ -124,7 +124,7 @@ describe('useAzurePipelineRunner', () => {
         },
       });
       expect(localStorage.getItem(LOCAL_STORAGE_KEY)).toBe(
-        JSON.stringify(result.current.buildMenagerState),
+        JSON.stringify(result.current.buildManagerState),
       );
     });
 
@@ -172,7 +172,7 @@ describe('useAzurePipelineRunner', () => {
       });
 
       expect(mockCancelBuild).toHaveBeenCalledWith(123);
-      expect(result.current.buildMenagerState.resource1.status).toBe(
+      expect(result.current.buildManagerState.resource1.status).toBe(
         'completed',
       );
     });
@@ -204,7 +204,7 @@ describe('useAzurePipelineRunner', () => {
         },
       };
 
-      expect(result.current.buildMenagerState).toEqual(expectedState);
+      expect(result.current.buildManagerState).toEqual(expectedState);
       expect(localStorage.getItem(LOCAL_STORAGE_KEY)).toBe(
         JSON.stringify(expectedState),
       );
@@ -235,7 +235,7 @@ describe('useAzurePipelineRunner', () => {
         },
       };
 
-      expect(result.current.buildMenagerState).toEqual(expectedState);
+      expect(result.current.buildManagerState).toEqual(expectedState);
       expect(localStorage.getItem(LOCAL_STORAGE_KEY)).toBe(
         JSON.stringify(expectedState),
       );
@@ -262,7 +262,7 @@ describe('useAzurePipelineRunner', () => {
       });
 
       expect(mockFetchBuildById).not.toHaveBeenCalled();
-      expect(result.current.buildMenagerState).toEqual(mockBuildState);
+      expect(result.current.buildManagerState).toEqual(mockBuildState);
     });
 
     it('should fetch builds at 5-second intervals and update state correctly', async () => {
@@ -294,7 +294,7 @@ describe('useAzurePipelineRunner', () => {
         await waitForNextUpdate();
       });
 
-      expect(result.current.buildMenagerState.resource1.status).toBe('running');
+      expect(result.current.buildManagerState.resource1.status).toBe('running');
     });
   });
 });

@@ -10,7 +10,7 @@ interface Resource {
 
 interface ResourceActionButtonProps {
     resource: Resource;
-    buildMenagerState: Record<string, BuildItemType>;
+    buildManagerState: Record<string, BuildItemType>;
     loading: boolean;
     onOpenModal: (resource: Resource) => void;
     onChangeCurrentBuildView: (resourceName: string) => void;
@@ -19,15 +19,15 @@ interface ResourceActionButtonProps {
 
 export const ResourceActionButton: React.FC<ResourceActionButtonProps> = ({
     resource,
-    buildMenagerState,
+    buildManagerState,
     loading,
     onOpenModal,
     onChangeCurrentBuildView,
     onCancelBuild,
 }) => {
     const theme = useTheme();
-    const currentResource = buildMenagerState[resource.resourceName];
-    const totalInQueue = Object.values(buildMenagerState).filter((q) => q.status !== 'completed').length;
+    const currentResource = buildManagerState[resource.resourceName];
+    const totalInQueue = Object.values(buildManagerState).filter((q) => q.status !== 'completed').length;
 
     if (!currentResource) {
         return (

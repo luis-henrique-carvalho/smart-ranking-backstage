@@ -34,7 +34,7 @@ describe('AzureServiceBusContent', () => {
             buildLogsDetails: [],
             currentBuildView: null,
             changeCurrentBuildViewAndFetchLogs: mockChangeCurrentBuildViewAndFetchLogs,
-            buildMenagerState: {},
+            buildManagerState: {},
             cancelBuild: mockCancelBuild,
         });
     });
@@ -122,7 +122,7 @@ describe('AzureServiceBusContent', () => {
             buildLogsDetails: [],
             currentBuildView: 'queue1',
             changeCurrentBuildViewAndFetchLogs: jest.fn(),
-            buildMenagerState: { // Corrigido para buildMenagerState
+            buildManagerState: { // Corrigido para buildManagerState
                 queue1: {
                     buildId: 123,
                     status: 'running',
@@ -175,7 +175,7 @@ describe('AzureServiceBusContent', () => {
             buildLogsDetails: [],
             currentBuildView: 'queue1',
             changeCurrentBuildViewAndFetchLogs: jest.fn(),
-            buildMenagerState: {
+            buildManagerState: {
                 queue1: {
                     buildId: 123,
                     status: 'running',
@@ -193,5 +193,56 @@ describe('AzureServiceBusContent', () => {
         await waitFor(() => {
             expect(mockCancelBuild).toHaveBeenCalled();
         });
+
+        expect(screen.getByText('Build cancelado com sucesso!')).toBeInTheDocument();
+    });
+
+    it("should display an error message when handleSubmit fails", async () => {
+        mockTriggerPipeline.mockRejectedValue(new Error("Pipeline error"));
+
+        renderComponent({
+            'azure-service-bus/queues': 'queue1',
+        });
+
+        fireEvent.click(screen.getByText('Execute'));
+
+        fireEvent.click(screen.getByText('Submeter'));
+
+        await waitFor(() => {
+            expect(mockTriggerPipeline).toHaveBeenCalled();
+        });
+
+        expect(screen.getByText('Erro: Pipeline error')).toBeInTheDocument();
+    });
+
+    it("should display an error message when handleCancelBuild fails", async () => {
+        mockCancelBuild.mockRejectedValue(new Error("Cancel error"));
+
+        (useAzurePipelineRunner as jest.Mock).mockReturnValue({
+            loading: false,
+            triggerPipeline: jest.fn(),
+            buildLogsDetails: [],
+            currentBuildView: 'queue1',
+            changeCurrentBuildViewAndFetchLogs: jest.fn(),
+            buildManagerState: {
+                queue1: {
+                    buildId: 123,
+                    status: 'running',
+                },
+            },
+            cancelBuild: mockCancelBuild,
+        });
+
+        renderComponent({
+            'azure-service-bus/queues': 'queue1',
+        });
+
+        fireEvent.click(screen.getByText('Cancel'));
+
+        await waitFor(() => {
+            expect(mockCancelBuild).toHaveBeenCalled();
+        });
+
+        expect(screen.getByText('Erro: Cancel error')).toBeInTheDocument();
     });
 });

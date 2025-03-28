@@ -12,7 +12,7 @@ export interface useAzurePipelineRunnerReturn {
   loading: boolean;
   error: string | null;
   buildLogsDetails: BuildLogDetailsType[];
-  buildMenagerState: Record<string, BuildItemType>;
+  buildManagerState: Record<string, BuildItemType>;
   currentBuildView: string | null;
   triggerPipeline: (data: PipelineParamsType) => Promise<void>;
   changeCurrentBuildViewAndFetchLogs: (resourceName: string) => void;
@@ -32,7 +32,7 @@ export const useAzurePipelineRunner = (): useAzurePipelineRunnerReturn => {
     BuildLogDetailsType[]
   >([]);
   const [currentBuildView, setCurrentBuildView] = useState<string | null>(null);
-  const [buildMenagerState, setBuildMenagerState] =
+  const [buildManagerState, setBuildManagerState] =
     useState<BuildMenagerStateType>({});
 
   const logsRefByBuildId = useRef(new Map<string, number[]>());
@@ -49,12 +49,12 @@ export const useAzurePipelineRunner = (): useAzurePipelineRunnerReturn => {
       ),
     );
 
-    setBuildMenagerState(filteredQueues);
+    setBuildManagerState(filteredQueues);
     localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(filteredQueues));
   }, []);
 
   const updateBuildState = (newBuild: BuildMenagerStateType) => {
-    setBuildMenagerState(prevState => {
+    setBuildManagerState(prevState => {
       const newState = { ...prevState, ...newBuild };
       localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(newState));
       return newState;
@@ -62,7 +62,7 @@ export const useAzurePipelineRunner = (): useAzurePipelineRunnerReturn => {
   };
 
   const startBuild = async (resourceName: string): Promise<void> => {
-    const buildItem = buildMenagerState[resourceName];
+    const buildItem = buildManagerState[resourceName];
 
     updateBuildState({
       [resourceName]: {
@@ -73,7 +73,7 @@ export const useAzurePipelineRunner = (): useAzurePipelineRunnerReturn => {
   };
 
   const completeBuild = async (resourceName: string): Promise<void> => {
-    const buildItem = buildMenagerState[resourceName];
+    const buildItem = buildManagerState[resourceName];
 
     updateBuildState({
       [resourceName]: {
@@ -130,9 +130,9 @@ export const useAzurePipelineRunner = (): useAzurePipelineRunnerReturn => {
     clearLogsForResource(resourceName);
     setCurrentBuildView(resourceName);
 
-    if (buildMenagerState[resourceName]) {
+    if (buildManagerState[resourceName]) {
       fetchBuildLogsDetails(
-        buildMenagerState[resourceName].buildId,
+        buildManagerState[resourceName].buildId,
         resourceName,
       );
     }
@@ -167,7 +167,7 @@ export const useAzurePipelineRunner = (): useAzurePipelineRunnerReturn => {
     setLoading(true);
     setError(null);
 
-    const buildItem = buildMenagerState[resourceName];
+    const buildItem = buildManagerState[resourceName];
 
     if (buildItem.status !== 'completed') {
       try {
@@ -184,7 +184,7 @@ export const useAzurePipelineRunner = (): useAzurePipelineRunnerReturn => {
 
   useEffect(() => {
     if (
-      !Object.values(buildMenagerState).some(
+      !Object.values(buildManagerState).some(
         q => q.status === 'queued' || q.status === 'running',
       )
     ) {
@@ -194,7 +194,7 @@ export const useAzurePipelineRunner = (): useAzurePipelineRunnerReturn => {
     const fetchBuilds = async () => {
       try {
         await Promise.all(
-          Object.entries(buildMenagerState)
+          Object.entries(buildManagerState)
             .filter(([, q]) => q.status === 'queued' || q.status === 'running')
             .map(async ([resourceName, content]) => {
               const buildResp = await azureServiceBusApi.fetchBuildById(
@@ -234,7 +234,7 @@ export const useAzurePipelineRunner = (): useAzurePipelineRunnerReturn => {
 
     return () => clearInterval(interval);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [buildMenagerState, currentBuildView, azureServiceBusApi]);
+  }, [buildManagerState, currentBuildView]);
 
   return {
     loading,
@@ -242,7 +242,7 @@ export const useAzurePipelineRunner = (): useAzurePipelineRunnerReturn => {
     buildLogsDetails,
     currentBuildView,
     changeCurrentBuildViewAndFetchLogs,
-    buildMenagerState,
+    buildManagerState,
     triggerPipeline,
     cancelBuild,
     completeBuild,

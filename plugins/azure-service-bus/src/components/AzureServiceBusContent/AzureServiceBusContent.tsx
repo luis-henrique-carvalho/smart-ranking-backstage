@@ -25,7 +25,7 @@ export const AzureServiceBusContent = () => {
     buildLogsDetails,
     currentBuildView,
     changeCurrentBuildViewAndFetchLogs,
-    buildMenagerState,
+    buildManagerState,
     cancelBuild,
   } = useAzurePipelineRunner();
 
@@ -71,20 +71,31 @@ export const AzureServiceBusContent = () => {
     }
   };
 
+  const handleCancelBuild = async (resourceName: string) => {
+    try {
+      await cancelBuild(resourceName);
+      setAlertMessage('Build cancelado com sucesso!');
+    }
+    catch (err) {
+      setAlertMessage(`Erro: ${err instanceof Error ? err.message : 'Erro desconhecido'}`);
+    }
+    finally {
+      setAlertOpen(true);
+    }
+  };
+
   const renderActionButton = (row: { resourceName: string; resourceType: string }) => (
     <ResourceActionButton
       resource={row}
-      buildMenagerState={buildMenagerState}
+      buildManagerState={buildManagerState}
       loading={loading}
       onOpenModal={handleOpenModal}
       onChangeCurrentBuildView={changeCurrentBuildViewAndFetchLogs}
-      onCancelBuild={cancelBuild}
+      onCancelBuild={handleCancelBuild}
     />
   );
 
-  console.log('buildMenagerState', buildMenagerState);
-  console.log('currentBuildView', currentBuildView);
-  const buildView = currentBuildView ? buildMenagerState[currentBuildView] : undefined;
+  const buildView = currentBuildView ? buildManagerState[currentBuildView] : undefined;
 
   return (
     <Grid container>
