@@ -1,3 +1,4 @@
+// Pipeline-related types
 export type PipelineParamsType = {
   service_name: string;
   resource_type: 'topic' | 'queue';
@@ -5,6 +6,8 @@ export type PipelineParamsType = {
   reprocessing_method: 'safe' | 'fast';
   generate_new_message_id: boolean;
 };
+
+// Build log-related types
 export interface BuildLogType {
   lineCount: number;
   createdOn: string;
@@ -19,6 +22,12 @@ export interface BuildLogsResponse {
   value: BuildLogType[];
 }
 
+export interface BuildLogDetailsType {
+  id: number;
+  value: string[];
+}
+
+// Build-related types
 export interface BuildType {
   id: number;
   status: string;
@@ -30,11 +39,7 @@ export interface BuildType {
   };
 }
 
-export interface BuildLogDetailsType {
-  id: number;
-  value: string[];
-}
-
+// Queue-related types
 export interface BuildItemType {
   resourceType: ResourceType;
   buildId: number;
