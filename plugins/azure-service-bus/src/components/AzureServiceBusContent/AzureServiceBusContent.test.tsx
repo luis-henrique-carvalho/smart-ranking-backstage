@@ -1,14 +1,24 @@
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { configApiRef } from '@backstage/core-plugin-api';
+import { configApiRef, useApi } from '@backstage/core-plugin-api';
 import { ApiProvider } from '@backstage/core-app-api';
 import { EntityProvider } from '@backstage/plugin-catalog-react';
 import { AzureServiceBusContent } from './AzureServiceBusContent';
 import { useAzurePipelineRunner } from '../../hooks/useAzurePipelineRunner';
 import { TestApiRegistry } from '@backstage/test-utils';
 
-jest.spyOn(console, 'error').mockImplementation((message) => {
-    return
+jest.mock('../../api', () => ({
+    AzureServiceBusApiRef: {
+        id: 'plugin.azure-service-bus.service',
+    },
+}));
+
+jest.mock('@backstage/core-plugin-api', () => {
+    const actualModule = jest.requireActual('@backstage/core-plugin-api');
+    return {
+        ...actualModule,
+        useApi: jest.fn(),
+    };
 });
 
 jest.mock('../../hooks/useAzurePipelineRunner', () => ({
@@ -16,18 +26,30 @@ jest.mock('../../hooks/useAzurePipelineRunner', () => ({
 }));
 
 const mockConfigApi = {
-    getOptionalString: jest.fn(() => 'http://mock-pipeline-url'),
+    getOptionalString: jest.fn((key: string) => {
+        if (key === 'plugins.azureServiceBus.pipelineUrl') {
+            return 'http://mock-pipeline-url';
+        }
+        return undefined;
+    }),
 };
 
 const apis = TestApiRegistry.from([configApiRef, mockConfigApi]);
 
 describe('AzureServiceBusContent', () => {
+    const mockChangeCurrentBuildViewAndFetchLogs = jest.fn();
     const mockTriggerPipeline = jest.fn();
     const mockCancelBuild = jest.fn();
-    const mockChangeCurrentBuildViewAndFetchLogs = jest.fn();
 
     beforeEach(() => {
         jest.clearAllMocks();
+        (useApi as jest.Mock).mockImplementation((apiRef) => {
+            if (apiRef === configApiRef) {
+                return mockConfigApi;
+            }
+            return {};
+        });
+
         (useAzurePipelineRunner as jest.Mock).mockReturnValue({
             loading: false,
             triggerPipeline: mockTriggerPipeline,
