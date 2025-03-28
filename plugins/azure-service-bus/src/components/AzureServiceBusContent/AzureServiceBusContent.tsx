@@ -82,7 +82,10 @@ export const AzureServiceBusContent = () => {
     />
   );
 
+  console.log('buildMenagerState', buildMenagerState);
+  console.log('currentBuildView', currentBuildView);
   const buildView = currentBuildView ? buildMenagerState[currentBuildView] : undefined;
+
   return (
     <Grid container>
       <Grid container spacing={3}>
