@@ -2,7 +2,6 @@ import { act, renderHook } from '@testing-library/react-hooks';
 import { useAzurePipelineRunner } from './useAzurePipelineRunner';
 import { useApi } from '@backstage/core-plugin-api';
 import {
-  BuildItemType,
   BuildLogDetailsType,
   BuildLogsResponse,
   PipelineParamsType,
@@ -58,6 +57,8 @@ describe('useAzurePipelineRunner', () => {
       triggerPipeline: expect.any(Function),
       changeCurrentBuildViewAndFetchLogs: expect.any(Function),
       cancelBuild: expect.any(Function),
+      completeBuild: expect.any(Function),
+      startBuild: expect.any(Function),
     });
   });
 
@@ -315,5 +316,187 @@ describe('useAzurePipelineRunner', () => {
     expect(mockFetchBuildLogs).toHaveBeenCalledWith(123);
     expect(mockFetchLogById).toHaveBeenCalledWith(10, 123);
     expect(mockFetchLogById).toHaveBeenCalledWith(20, 123);
+  });
+
+  it('should cancel a build and update state correctly', async () => {
+    const mockBuildState = {
+      resource1: {
+        buildId: 123,
+        status: 'running',
+        timestamp: Date.now(),
+        resourceType: 'topic',
+      },
+    };
+
+    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(mockBuildState));
+
+    const { result } = renderHook(() => useAzurePipelineRunner());
+
+    expect(result.current.buildMenagerState).toEqual(mockBuildState);
+
+    mockCancelBuild.mockResolvedValueOnce(undefined);
+
+    await act(async () => {
+      await result.current.cancelBuild('resource1');
+    });
+
+    expect(mockCancelBuild).toHaveBeenCalledWith(123);
+    expect(result.current.buildMenagerState.resource1.status).toBe('completed');
+    expect(result.current.error).toBeNull();
+    expect(result.current.loading).toBe(false);
+  });
+
+  it('should stop the fetch interval when no builds are queued or running', async () => {
+    const mockBuildState = {
+      resource1: {
+        buildId: 123,
+        status: 'completed',
+        timestamp: Date.now(),
+        resourceType: 'topic',
+      },
+      resource2: {
+        buildId: 124,
+        status: 'completed',
+        timestamp: Date.now(),
+        resourceType: 'queue',
+      },
+    };
+
+    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(mockBuildState));
+
+    const { result } = renderHook(() => useAzurePipelineRunner());
+
+    expect(result.current.buildMenagerState).toEqual(mockBuildState);
+
+    await act(async () => {
+      jest.advanceTimersByTime(5000);
+    });
+
+    expect(mockFetchBuildById).not.toHaveBeenCalled();
+  });
+
+  it('should persist updated state in localStorage after each operation', async () => {
+    const mockPipelineData: PipelineParamsType = {
+      service_name: 'service',
+      resource_type: 'topic',
+      resource_name: 'resource',
+      reprocessing_method: 'safe',
+      generate_new_message_id: false,
+    };
+
+    const mockBuildResponse = {
+      id: 123,
+      status: 'notStarted',
+      _links: { web: { href: 'http://build' } },
+    };
+
+    mockTriggerPipeline.mockResolvedValue(mockBuildResponse);
+
+    const { result } = renderHook(() => useAzurePipelineRunner());
+
+    await act(async () => {
+      await result.current.triggerPipeline(mockPipelineData);
+    });
+
+    const expectedStateAfterTrigger = {
+      [mockPipelineData.resource_name]: {
+        resourceType: mockPipelineData.resource_type,
+        buildId: mockBuildResponse.id,
+        status: 'queued',
+        timestamp: expect.any(Number),
+      },
+    };
+
+    const actualStateAfterTrigger = JSON.parse(
+      localStorage.getItem(LOCAL_STORAGE_KEY) || '{}',
+    );
+
+    expect(actualStateAfterTrigger).toEqual(expectedStateAfterTrigger);
+
+    mockCancelBuild.mockResolvedValueOnce(mockBuildResponse);
+
+    await act(async () => {
+      await result.current.cancelBuild(mockPipelineData.resource_name);
+    });
+
+    const expectedStateAfterCancel = {
+      [mockPipelineData.resource_name]: {
+        ...expectedStateAfterTrigger[mockPipelineData.resource_name],
+        status: 'completed',
+      },
+    };
+
+    const actualStateAfterCancel = JSON.parse(
+      localStorage.getItem(LOCAL_STORAGE_KEY) || '{}',
+    );
+
+    expect(result.current.buildMenagerState).toEqual(expectedStateAfterCancel);
+    expect(actualStateAfterCancel).toEqual(expectedStateAfterCancel);
+  });
+
+  it('should update state and localStorage when startBuild is called', async () => {
+    const mockBuildState = {
+      resource1: {
+        buildId: 123,
+        status: 'queued',
+        timestamp: Date.now(),
+        resourceType: 'topic',
+      },
+    };
+
+    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(mockBuildState));
+
+    const { result } = renderHook(() => useAzurePipelineRunner());
+
+    expect(result.current.buildMenagerState).toEqual(mockBuildState);
+
+    await act(async () => {
+      await result.current.startBuild('resource1');
+    });
+
+    const expectedState = {
+      resource1: {
+        ...mockBuildState.resource1,
+        status: 'running',
+      },
+    };
+
+    expect(result.current.buildMenagerState).toEqual(expectedState);
+    expect(localStorage.getItem(LOCAL_STORAGE_KEY)).toBe(
+      JSON.stringify(expectedState),
+    );
+  });
+
+  it('should update state and localStorage when completeBuild is called', async () => {
+    const mockBuildState = {
+      resource1: {
+        buildId: 123,
+        status: 'running',
+        timestamp: Date.now(),
+        resourceType: 'topic',
+      },
+    };
+
+    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(mockBuildState));
+
+    const { result } = renderHook(() => useAzurePipelineRunner());
+
+    expect(result.current.buildMenagerState).toEqual(mockBuildState);
+
+    await act(async () => {
+      await result.current.completeBuild('resource1');
+    });
+
+    const expectedState = {
+      resource1: {
+        ...mockBuildState.resource1,
+        status: 'completed',
+      },
+    };
+
+    expect(result.current.buildMenagerState).toEqual(expectedState);
+    expect(localStorage.getItem(LOCAL_STORAGE_KEY)).toBe(
+      JSON.stringify(expectedState),
+    );
   });
 });

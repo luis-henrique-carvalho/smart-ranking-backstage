@@ -17,6 +17,8 @@ export interface useAzurePipelineRunnerReturn {
   triggerPipeline: (data: PipelineParamsType) => Promise<void>;
   changeCurrentBuildViewAndFetchLogs: (resourceName: string) => void;
   cancelBuild: (resourceName: string) => Promise<void>;
+  completeBuild: (resourceName: string) => Promise<void>;
+  startBuild: (resourceName: string) => Promise<void>;
 }
 
 type BuildMenagerStateType = Record<string, BuildItemType>;
@@ -243,5 +245,7 @@ export const useAzurePipelineRunner = (): useAzurePipelineRunnerReturn => {
     buildMenagerState,
     triggerPipeline,
     cancelBuild,
+    completeBuild,
+    startBuild,
   };
 };
