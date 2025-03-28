@@ -20,4 +20,4 @@ const InfoCardTitle = ({ buildView }: InfoCardTitleProps) => {
     )
 }
 
-export default InfoCardTitle
+export default InfoCardTitle;

@@ -1,18 +1,17 @@
 import React, { useState } from 'react';
-import { useTheme } from '@material-ui/core/styles';
-import { Grid, Snackbar } from '@material-ui/core';
-import { InfoCard, Page, Content } from '@backstage/core-components';
-import { useEntity, MissingAnnotationEmptyState } from '@backstage/plugin-catalog-react';
 import { useApi, configApiRef } from '@backstage/core-plugin-api';
-import { PipelineParamsType } from '../../types';
-import { ResourceTable } from './components/ResourceTable';
-import ReprocessModal from './components/ReprocessModal';
-import ReprocessForm from './components/ReprocessForm';
-import BuildLogs from './components/BuildLogs';
-import { Alert } from '@material-ui/lab';
+import { useEntity, MissingAnnotationEmptyState } from '@backstage/plugin-catalog-react';
 import { useAzurePipelineRunner } from '../../hooks/useAzurePipelineRunner';
-import { ResourceActionButton } from './components/ResourceActionButton';
+import { PipelineParamsType } from '../../types';
+import { Grid, Snackbar } from '@material-ui/core';
+import { Alert } from '@material-ui/lab';
+import { InfoCard } from '@backstage/core-components';
+import BuildLogs from './components/BuildLogs';
 import InfoCardTitle from './components/InfoCardTitle';
+import ReprocessForm from './components/ReprocessForm';
+import ReprocessModal from './components/ReprocessModal';
+import { ResourceActionButton } from './components/ResourceActionButton';
+import { ResourceTable } from './components/ResourceTable';
 
 export const AzureServiceBusContent = () => {
   const { entity } = useEntity();
@@ -20,7 +19,6 @@ export const AzureServiceBusContent = () => {
   const [selectedResource, setSelectedResource] = useState<{ resourceName: string; resourceType: string } | null>(null);
   const [alertOpen, setAlertOpen] = useState(false);
   const [alertMessage, setAlertMessage] = useState('');
-  const theme = useTheme();
   const {
     loading,
     triggerPipeline,
@@ -102,7 +100,7 @@ export const AzureServiceBusContent = () => {
               ) : 'Logs do Build'
             }
           >
-            {buildLogsDetails && <BuildLogs buildLogsDetails={buildLogsDetails} isLoading={loading} />}
+            {buildLogsDetails && <BuildLogs buildLogsDetails={buildLogsDetails} />}
           </InfoCard>
         </Grid>
       </Grid>
