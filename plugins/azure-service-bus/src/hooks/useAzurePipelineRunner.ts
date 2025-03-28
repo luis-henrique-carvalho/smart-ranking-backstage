@@ -154,8 +154,8 @@ export const useAzurePipelineRunner = (): useAzurePipelineRunnerReturn => {
           timestamp: Date.now(),
         },
       });
-    } catch (e) {
-      setError('Erro ao disparar pipeline');
+    } catch (e: any) {
+      setError(e.message);
     } finally {
       setLoading(false);
     }
