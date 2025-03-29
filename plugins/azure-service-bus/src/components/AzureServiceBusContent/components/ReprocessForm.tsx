@@ -2,16 +2,17 @@ import React, { useState } from 'react';
 import {
     TextField, FormControl, InputLabel, Select, MenuItem, Checkbox, FormControlLabel, Button
 } from '@material-ui/core';
-import { PipelineParams } from '../../../types';
+import { PipelineParamsType } from '../../../types';
 
 type ReprocessFormProps = {
     serviceName: string;
     resourceType: string;
     resourceName: string;
-    onSubmit: (data: PipelineParams) => void;
+    onSubmit: (data: PipelineParamsType) => void;
+    isLoading: boolean;
 };
 
-const ReprocessForm: React.FC<ReprocessFormProps> = ({ serviceName, resourceType, resourceName, onSubmit }) => {
+const ReprocessForm: React.FC<ReprocessFormProps> = ({ serviceName, resourceType, resourceName, onSubmit, isLoading }) => {
     const [generateNewMessageId, setGenerateNewMessageId] = useState(false);
     const [reprocessingMethod, setReprocessingMethod] = useState<'safe' | 'fast'>('safe');
 
@@ -44,9 +45,9 @@ const ReprocessForm: React.FC<ReprocessFormProps> = ({ serviceName, resourceType
                 </Select>
             </FormControl>
 
-            <Button variant="contained" color="primary" onClick={handleSubmit} fullWidth style={{ marginBottom: 8, marginTop: 8 }}>
+            <Button variant="contained" color="primary" onClick={handleSubmit} fullWidth style={{ marginBottom: 8, marginTop: 8 }} disabled={isLoading}>
                 Submeter
-            </Button>
+            </Button >
         </>
     );
 };
