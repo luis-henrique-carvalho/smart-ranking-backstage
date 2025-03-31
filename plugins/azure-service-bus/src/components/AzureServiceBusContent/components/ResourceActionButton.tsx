@@ -103,11 +103,6 @@ export const ResourceActionButton: React.FC<ResourceActionButtonProps> = ({
                     </Grid>
                 </Grid>
             )}
-            {totalInQueue > 0 && currentResource.status === "running" && (
-                <Typography variant="body2" color="textSecondary" style={{ marginTop: '8px' }}>
-                    Total in queue: {totalInQueue}
-                </Typography>
-            )}
         </Box>
     );
 };
