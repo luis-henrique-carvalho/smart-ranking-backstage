@@ -25,7 +25,6 @@ export const ResourceActionButton: React.FC<ResourceActionButtonProps> = ({
     onChangeCurrentBuildView,
     onCancelBuild,
 }) => {
-    const theme = useTheme();
     const currentResource = buildManagerState[resource.resourceName];
     const totalInQueue = Object.values(buildManagerState).filter((q) => q.status !== 'completed').length;
 

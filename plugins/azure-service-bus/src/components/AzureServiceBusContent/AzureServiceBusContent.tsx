@@ -102,6 +102,7 @@ export const AzureServiceBusContent = () => {
       <Grid container spacing={3}>
         <Grid item xs={7}>
           <ResourceTable
+            buildManagerState={buildManagerState}
             combinedData={combinedData}
             renderActionButton={renderActionButton}
           />
