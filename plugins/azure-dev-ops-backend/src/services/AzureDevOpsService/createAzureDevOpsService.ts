@@ -38,7 +38,6 @@ export async function createAzureDevOpsService({
     },
 
     async listProjects(organization) {
-      console.log('organization', organization);
       try {
         const response = await azureApi.get(
           `/${organization}/_apis/projects?api-version=7.1`,
