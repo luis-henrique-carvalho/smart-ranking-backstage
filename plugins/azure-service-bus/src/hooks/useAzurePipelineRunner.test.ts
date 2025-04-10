@@ -297,4 +297,37 @@ describe('useAzurePipelineRunner', () => {
       expect(result.current.buildManagerState.resource1.status).toBe('running');
     });
   });
+
+  describe('Change Current Build View', () => {
+    it('should change current build view and fetch logs', async () => {
+      const mockBuildState = {
+        resource1: {
+          buildId: 456,
+          status: 'running',
+          timestamp: Date.now(),
+          resourceType: 'topic',
+        },
+      };
+
+      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(mockBuildState));
+
+      mockFetchBuildLogs.mockResolvedValue({
+        value: [{ id: 1 }, { id: 2 }],
+      });
+
+      mockFetchLogById.mockImplementation(id => ({
+        id,
+        content: `log content ${id}`,
+      }));
+
+      const { result } = renderHook(() => useAzurePipelineRunner());
+
+      await act(async () => {
+        result.current.changeCurrentBuildViewAndFetchLogs('resource1');
+      });
+
+      expect(result.current.currentBuildView).toBe('resource1');
+      expect(result.current.buildLogsDetails.length).toBe(2);
+    });
+  });
 });

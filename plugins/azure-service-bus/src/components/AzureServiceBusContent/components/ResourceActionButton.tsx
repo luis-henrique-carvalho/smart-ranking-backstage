@@ -13,7 +13,7 @@ interface ResourceActionButtonProps {
     buildManagerState: Record<string, BuildItemType>;
     loading: boolean;
     onOpenModal: (resource: Resource) => void;
-    onChangeCurrentBuildView: (resourceName: string) => void;
+    onChangeCurrentBuildView: (resourceName: string) => Promise<void>;
     onCancelBuild: (resourceName: string) => void;
 }
 
@@ -25,7 +25,6 @@ export const ResourceActionButton: React.FC<ResourceActionButtonProps> = ({
     onChangeCurrentBuildView,
     onCancelBuild,
 }) => {
-    const theme = useTheme();
     const currentResource = buildManagerState[resource.resourceName];
     const totalInQueue = Object.values(buildManagerState).filter((q) => q.status !== 'completed').length;
 
@@ -67,7 +66,8 @@ export const ResourceActionButton: React.FC<ResourceActionButtonProps> = ({
                         <Button
                             variant="outlined"
                             color="default"
-                            onClick={() => onChangeCurrentBuildView(resource.resourceName)}
+                            disabled={loading}
+                            onClick={async () => await onChangeCurrentBuildView(resource.resourceName)}
                             style={{ width: '100%' }}
                         >
                             Show Logs
@@ -80,7 +80,8 @@ export const ResourceActionButton: React.FC<ResourceActionButtonProps> = ({
                         <Button
                             variant="contained"
                             color={currentResource.status === 'running' ? 'default' : 'primary'}
-                            onClick={() => onChangeCurrentBuildView(resource.resourceName)}
+                            disabled={loading}
+                            onClick={async () => await onChangeCurrentBuildView(resource.resourceName)}
                             startIcon={
                                 currentResource.status === 'running' && (
                                     <CircularProgress size={20} style={{ color: 'black' }} />
