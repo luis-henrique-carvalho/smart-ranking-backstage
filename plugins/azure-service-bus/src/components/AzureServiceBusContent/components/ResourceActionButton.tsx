@@ -25,7 +25,6 @@ export const ResourceActionButton: React.FC<ResourceActionButtonProps> = ({
     onChangeCurrentBuildView,
     onCancelBuild,
 }) => {
-    const theme = useTheme();
     const currentResource = buildManagerState[resource.resourceName];
     const totalInQueue = Object.values(buildManagerState).filter((q) => q.status !== 'completed').length;
 
@@ -103,11 +102,6 @@ export const ResourceActionButton: React.FC<ResourceActionButtonProps> = ({
                         </Button>
                     </Grid>
                 </Grid>
-            )}
-            {totalInQueue > 0 && currentResource.status === "running" && (
-                <Typography variant="body2" color="textSecondary" style={{ marginTop: '8px' }}>
-                    Total in queue: {totalInQueue}
-                </Typography>
             )}
         </Box>
     );
