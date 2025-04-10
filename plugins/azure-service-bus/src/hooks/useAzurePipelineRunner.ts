@@ -15,7 +15,7 @@ export interface useAzurePipelineRunnerReturn {
   buildManagerState: Record<string, BuildItemType>;
   currentBuildView: string | null;
   triggerPipeline: (data: PipelineParamsType) => Promise<void>;
-  changeCurrentBuildViewAndFetchLogs: (resourceName: string) => void;
+  changeCurrentBuildViewAndFetchLogs: (resourceName: string) => Promise<void>;
   cancelBuild: (resourceName: string) => Promise<void>;
   completeBuild: (resourceName: string) => Promise<void>;
   startBuild: (resourceName: string) => Promise<void>;
@@ -91,34 +91,29 @@ export const useAzurePipelineRunner = (): useAzurePipelineRunnerReturn => {
   const fetchBuildLogsDetails = async (
     buildId: number,
     resourceName: string,
-  ) => {
+  ): Promise<void> => {
     try {
       const logs = await azureServiceBusApi.fetchBuildLogs(buildId);
 
       if (logs?.value?.length) {
-        const detailedLogs = await Promise.all(
-          logs.value.map(log => {
-            const existingLogs =
-              logsRefByBuildId.current.get(resourceName) || [];
+        const promises = logs.value.flatMap(log => {
+          const existingLogs = logsRefByBuildId.current.get(resourceName) || [];
 
-            if (!existingLogs.includes(log.id)) {
-              logsRefByBuildId.current.set(resourceName, [
-                ...existingLogs,
-                log.id,
-              ]);
-              return azureServiceBusApi.fetchLogById(log.id, buildId);
-            }
+          if (!existingLogs.includes(log.id)) {
+            logsRefByBuildId.current.set(resourceName, [
+              ...existingLogs,
+              log.id,
+            ]);
+            return [azureServiceBusApi.fetchLogById(log.id, buildId)];
+          }
 
-            return null;
-          }),
-        );
+          return [];
+        });
 
-        const filteredLogs = detailedLogs.filter(
-          log => log !== null,
-        ) as BuildLogDetailsType[];
+        const detailedLogs = await Promise.all(promises);
 
-        if (filteredLogs.length > 0) {
-          setBuildLogsDetails(prev => [...prev, ...filteredLogs]);
+        if (detailedLogs.length > 0) {
+          setBuildLogsDetails(prev => [...prev, ...detailedLogs]);
         }
       }
     } catch (err) {
@@ -126,15 +121,23 @@ export const useAzurePipelineRunner = (): useAzurePipelineRunnerReturn => {
     }
   };
 
-  const changeCurrentBuildViewAndFetchLogs = (resourceName: string) => {
+  const changeCurrentBuildViewAndFetchLogs = async (
+    resourceName: string,
+  ): Promise<void> => {
+    setLoading(true);
+    setError(null);
     clearLogsForResource(resourceName);
     setCurrentBuildView(resourceName);
 
-    if (buildManagerState[resourceName]) {
-      fetchBuildLogsDetails(
-        buildManagerState[resourceName].buildId,
-        resourceName,
-      );
+    try {
+      const buildItem = buildManagerState[resourceName];
+      if (buildItem) {
+        await fetchBuildLogsDetails(buildItem.buildId, resourceName);
+      }
+    } catch (err) {
+      setError('Erro ao buscar logs');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -173,7 +176,7 @@ export const useAzurePipelineRunner = (): useAzurePipelineRunnerReturn => {
       try {
         await azureServiceBusApi.cancelBuild(buildItem.buildId);
 
-        completeBuild(resourceName);
+        await completeBuild(resourceName);
       } catch (err) {
         setError('Erro ao cancelar build');
       } finally {
@@ -209,15 +212,15 @@ export const useAzurePipelineRunner = (): useAzurePipelineRunnerReturn => {
               const isCompleted = buildResp.status === 'completed';
 
               if (isInProgress && content.status !== 'running') {
-                startBuild(resourceName);
+                await startBuild(resourceName);
               }
 
               if (isCompleted && content.status !== 'completed') {
-                completeBuild(resourceName);
+                await completeBuild(resourceName);
               }
 
               if (currentBuildView === resourceName) {
-                fetchBuildLogsDetails(content.buildId, resourceName);
+                await fetchBuildLogsDetails(content.buildId, resourceName);
               }
             }),
         );

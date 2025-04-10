@@ -115,7 +115,7 @@ export const AzureServiceBusContent = () => {
               ) : 'Logs do Build'
             }
           >
-            {buildLogsDetails && <BuildLogs buildLogsDetails={buildLogsDetails} />}
+            {buildLogsDetails && <BuildLogs buildLogsDetails={buildLogsDetails} isLoading={loading} />}
           </InfoCard>
         </Grid>
       </Grid>
