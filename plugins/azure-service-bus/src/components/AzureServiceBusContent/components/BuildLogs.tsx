@@ -7,9 +7,10 @@ import Skeleton from "@material-ui/lab/Skeleton"; // Importe o Skeleton
 
 interface BuildLogsProps {
     buildLogsDetails: BuildLogDetailsType[] | null;
+    isLoading?: boolean;
 }
 
-const BuildLogs: React.FC<BuildLogsProps> = ({ buildLogsDetails }) => {
+const BuildLogs: React.FC<BuildLogsProps> = ({ buildLogsDetails, isLoading }) => {
 
     const useStyles = makeStyles({
         logViewerRoot: {
@@ -28,10 +29,29 @@ const BuildLogs: React.FC<BuildLogsProps> = ({ buildLogsDetails }) => {
         }
     };
 
-    if (!buildLogsDetails) {
-        return <Skeleton variant="rect" width="100%" height="60vh" />;
+    if (isLoading) {
+        return (
+            <CardContent>
+                <div
+                    style={{
+                        padding: "10px",
+                        borderRadius: "4px",
+                        minHeight: "60vh",
+                    }}
+                >
+                    {Array.from({ length: 20 }).map((_, i) => (
+                        <Skeleton
+                            key={i}
+                            variant="text"
+                            height={20}
+                            width={`${80 + Math.random() * 20}%`}
+                            style={{ marginBottom: 6 }}
+                        />
+                    ))}
+                </div>
+            </CardContent>
+        );
     }
-
     if (!buildLogsDetails || buildLogsDetails.length === 0) {
         return <Typography color="textSecondary">Nenhum log disponível</Typography>;
     }
