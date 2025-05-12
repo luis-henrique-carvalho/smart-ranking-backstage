@@ -1,109 +1,73 @@
 import { createTemplateAction } from '@backstage/plugin-scaffolder-node';
+import api from '../config/api';
 
-type SectionConfig = {
-  title?: string;
-  mode?: 'table' | 'list' | 'properties' | 'text' | 'auto';
-  data: any;
-};
-
-export const summaryMarkdown = createTemplateAction<{
-  sections: Record<string, SectionConfig | any>;
-}>({
-  id: 'custom:summary-markdown',
-  schema: {
-    input: {
-      required: ['sections'],
-      type: 'object',
-      properties: {
-        sections: {
-          type: 'object',
-          description:
-            'Outputs das outras actions, agrupados por nome. Pode ser só o dado ou um objeto com config.',
+export function createAzureBranchAction() {
+  return createTemplateAction<{
+    repository: string;
+    organization: string;
+    project: string;
+    branchNames: string[];
+  }>({
+    id: 'azure:create-branch',
+    description: 'Creates standard branches in Azure DevOps repository',
+    schema: {
+      input: {
+        required: ['repository', 'organization', 'project', 'branchNames'],
+        type: 'object',
+        properties: {
+          repository: {
+            type: 'string',
+            title: 'Repository URL',
+            description: 'The URL of the repository',
+          },
+          organization: {
+            type: 'string',
+            title: 'Organization',
+          },
+          project: {
+            type: 'string',
+            title: 'Project',
+          },
+          branchNames: {
+            type: 'array',
+            title: 'Target Branches',
+            description: 'List of branches to be created',
+            items: {
+              type: 'string',
+            },
+          },
         },
       },
     },
-    output: {
-      markdown: {
-        type: 'string',
-        description: 'Resumo em Markdown',
-      },
+    async handler(ctx) {
+      const { repository, organization, project, branchNames } = ctx.input;
+
+      try {
+        const azureUrl = `/${organization}/${project}/_apis/git/repositories/${repository}/refs?api-version=7.1-preview.1`;
+        const repositoryResponse = await api.get(azureUrl);
+        const repositoryId = repositoryResponse.data.value[0].objectId;
+
+        if (repositoryResponse.status !== 200) {
+          throw new Error(
+            `Failed to fetch repository reference: ${repositoryResponse}`,
+          );
+        }
+
+        const createBranchsBody = branchNames.map(branchName => {
+          return {
+            name: `refs/heads/${branchName}`,
+            oldObjectId: '0000000000000000000000000000000000000000',
+            newObjectId: repositoryId,
+          };
+        });
+
+        await api.post(azureUrl, createBranchsBody);
+
+        ctx.logger.info('All branches created successfully!');
+      } catch (error) {
+        ctx.logger.error(error);
+        throw new Error('Failed to create branches');
+      }
     },
-  },
-  async handler(ctx) {
-    const { sections } = ctx.input;
-    let markdown = '# Resumo das Actions\n\n';
-
-    for (const [sectionName, sectionValue] of Object.entries(sections)) {
-      // Permite configuração por seção
-      let title = sectionName;
-      let mode: SectionConfig['mode'] = 'auto';
-      let data = sectionValue;
-
-      if (
-        typeof sectionValue === 'object' &&
-        sectionValue !== null &&
-        'data' in sectionValue
-      ) {
-        title = sectionValue.title || sectionName;
-        mode = sectionValue.mode || 'auto';
-        data = sectionValue.data;
-      }
-
-      markdown += `## ${title}\n`;
-
-      // Lógica de formatação
-      if (mode === 'auto') {
-        if (Array.isArray(data)) {
-          if (data.length > 0 && typeof data[0] === 'object') {
-            mode = 'table';
-          } else {
-            mode = 'list';
-          }
-        } else if (typeof data === 'object' && data !== null) {
-          mode = 'properties';
-        } else {
-          mode = 'text';
-        }
-      }
-
-      if (
-        mode === 'table' &&
-        Array.isArray(data) &&
-        data.length > 0 &&
-        typeof data[0] === 'object'
-      ) {
-        // Tabela Markdown
-        const headers = Object.keys(data[0]);
-        markdown += `| ${headers.join(' | ')} |\n`;
-        markdown += `| ${headers.map(() => '---').join(' | ')} |\n`;
-        data.forEach(item => {
-          markdown += `| ${headers.map(h => item[h] ?? '').join(' | ')} |\n`;
-        });
-      } else if (mode === 'list' && Array.isArray(data)) {
-        data.forEach(item => {
-          markdown += `- ${
-            typeof item === 'object' ? JSON.stringify(item) : item
-          }\n`;
-        });
-      } else if (
-        mode === 'properties' &&
-        typeof data === 'object' &&
-        data !== null
-      ) {
-        for (const [key, value] of Object.entries(data)) {
-          markdown += `- **${key}:** ${
-            typeof value === 'object' ? JSON.stringify(value) : value
-          }\n`;
-        }
-      } else {
-        markdown += `${
-          typeof data === 'object' ? JSON.stringify(data, null, 2) : data
-        }\n`;
-      }
-
-      markdown += '\n';
-    }
-
-    ctx.output('markdown', markdown);
-  },
-});
+  });
+}
