@@ -6,7 +6,7 @@ import { createSummaryMarkdownAction } from './actions/create-summary-markdown';
  * A backend module that registers the action into the scaffolder
  */
 export const scaffolderModule = createBackendModule({
-  moduleId: 'summary-markdown',
+  moduleId: 'create-summary-markdown',
   pluginId: 'scaffolder',
   register({ registerInit }) {
     registerInit({

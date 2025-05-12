@@ -55,7 +55,7 @@ export function createSummaryMarkdownAction(): TemplateAction<SummaryInput> {
     async handler(ctx) {
       const { sections } = ctx.input;
 
-      // Validação básica do input
+      console.log('Input sections:', sections);
       if (!sections || typeof sections !== 'object') {
         throw new Error('O input "sections" deve ser um objeto válido.');
       }
@@ -73,24 +73,18 @@ export function createSummaryMarkdownAction(): TemplateAction<SummaryInput> {
 
         markdownParts.push(`## ${title}\n`);
 
-        // Detecta o modo de exibição se for 'auto'
         if (mode === 'auto') {
           mode = detectMode(data);
         }
-
-        // Renderiza conforme o modo
         markdownParts.push(renderSection(data, mode));
+        console.log('Rendered section:', renderSection(data, mode));
         markdownParts.push('\n');
       }
-
       ctx.output('markdown', markdownParts.join(''));
     },
   });
 }
 
-/**
- * Função auxiliar para processar o valor de uma seção.
- */
 function parseSectionValue(
   sectionValue: any,
   sectionName: string,
@@ -144,6 +138,28 @@ function renderSection(data: any, mode: SectionConfig['mode']): string {
   }
 }
 
+/**
+ * Helper to detect if a string is a URL.
+ */
+function isUrl(value: any): boolean {
+  return (
+    typeof value === 'string' && /^https?:\/\/[^\s/$.?#].[^\s]*$/i.test(value)
+  );
+}
+
+/**
+ * Helper to format a value as Markdown, converting URLs to links.
+ */
+function formatMarkdownValue(value: any): string {
+  if (isUrl(value)) {
+    return `[${value}](${value})`;
+  }
+  if (typeof value === 'object' && value !== null) {
+    return JSON.stringify(value);
+  }
+  return String(value);
+}
+
 function renderTable(data: any[]): string {
   if (
     !Array.isArray(data) ||
@@ -153,30 +169,35 @@ function renderTable(data: any[]): string {
     return '';
   }
   const headers = Object.keys(data[0]);
+  console.log('Headers:', headers);
   let table = `| ${headers.join(' | ')} |\n`;
   table += `| ${headers.map(() => '---').join(' | ')} |\n`;
   for (const item of data) {
-    table += `| ${headers.map(h => item[h] ?? '').join(' | ')} |\n`;
+    table += `| ${headers
+      .map(h => formatMarkdownValue(item[h] ?? ''))
+      .join(' | ')} |\n`;
   }
+
+  console.log(table);
   return table;
 }
 
 function renderList(data: any[]): string {
   if (!Array.isArray(data)) return '';
   return data
-    .map(item => `- ${typeof item === 'object' ? JSON.stringify(item) : item}`)
+    .map(item => {
+      if (typeof item === 'object' && item !== null) {
+        return `- ${formatMarkdownValue(item)}`;
+      }
+      return `- ${formatMarkdownValue(item)}`;
+    })
     .join('\n');
 }
 
 function renderProperties(data: object): string {
   if (typeof data !== 'object' || data === null) return '';
   return Object.entries(data)
-    .map(
-      ([key, value]) =>
-        `- **${key}:** ${
-          typeof value === 'object' ? JSON.stringify(value) : value
-        }`,
-    )
+    .map(([key, value]) => `- **${key}:** ${formatMarkdownValue(value)}`)
     .join('\n');
 }
 
