@@ -55,7 +55,6 @@ export function createSummaryMarkdownAction(): TemplateAction<SummaryInput> {
     async handler(ctx) {
       const { sections } = ctx.input;
 
-      console.log('Input sections:', sections);
       if (!sections || typeof sections !== 'object') {
         throw new Error('O input "sections" deve ser um objeto válido.');
       }
@@ -77,7 +76,6 @@ export function createSummaryMarkdownAction(): TemplateAction<SummaryInput> {
           mode = detectMode(data);
         }
         markdownParts.push(renderSection(data, mode));
-        console.log('Rendered section:', renderSection(data, mode));
         markdownParts.push('\n');
       }
       ctx.output('markdown', markdownParts.join(''));
@@ -100,6 +98,7 @@ function parseSectionValue(
       data: sectionValue.data,
     };
   }
+
   return { title: sectionName, mode: 'auto', data: sectionValue };
 }
 
@@ -108,14 +107,19 @@ function parseSectionValue(
  */
 function detectMode(data: any): SectionConfig['mode'] {
   if (Array.isArray(data)) {
-    if (data.length > 0 && typeof data[0] === 'object' && data[0] !== null) {
-      return 'table';
-    }
-    return 'list';
+    return data.length > 0 &&
+      data.every(
+        item =>
+          typeof item === 'object' && item !== null && !Array.isArray(item),
+      )
+      ? 'table'
+      : 'list';
   }
-  if (typeof data === 'object' && data !== null) {
-    return 'properties';
+
+  if (typeof data === 'object' && data !== null && !Array.isArray(data)) {
+    return Object.keys(data).length === 0 ? 'text' : 'properties';
   }
+
   return 'text';
 }
 
@@ -154,9 +158,11 @@ function formatMarkdownValue(value: any): string {
   if (isUrl(value)) {
     return `[${value}](${value})`;
   }
-  if (typeof value === 'object' && value !== null) {
-    return JSON.stringify(value);
+
+  if (value && typeof value === 'object') {
+    return JSON.stringify(value, null, 2);
   }
+
   return String(value);
 }
 
@@ -168,34 +174,30 @@ function renderTable(data: any[]): string {
   ) {
     return '';
   }
-  const headers = Object.keys(data[0]);
-  console.log('Headers:', headers);
-  let table = `| ${headers.join(' | ')} |\n`;
-  table += `| ${headers.map(() => '---').join(' | ')} |\n`;
-  for (const item of data) {
-    table += `| ${headers
-      .map(h => formatMarkdownValue(item[h] ?? ''))
-      .join(' | ')} |\n`;
-  }
 
-  console.log(table);
-  return table;
+  const headers = Object.keys(data[0]);
+  const headerRow = `| ${headers.join(' | ')} |`;
+  const separatorRow = `| ${headers.map(() => '---').join(' | ')} |`;
+
+  const rows = data.map(
+    item =>
+      `| ${headers.map(h => formatMarkdownValue(item[h] ?? '')).join(' | ')} |`,
+  );
+
+  return [headerRow, separatorRow, ...rows].join('\n');
 }
 
 function renderList(data: any[]): string {
-  if (!Array.isArray(data)) return '';
-  return data
-    .map(item => {
-      if (typeof item === 'object' && item !== null) {
-        return `- ${formatMarkdownValue(item)}`;
-      }
-      return `- ${formatMarkdownValue(item)}`;
-    })
-    .join('\n');
+  if (!Array.isArray(data)) {
+    return '';
+  }
+
+  return data.map(item => `- ${formatMarkdownValue(item)}`).join('\n');
 }
 
 function renderProperties(data: object): string {
   if (typeof data !== 'object' || data === null) return '';
+
   return Object.entries(data)
     .map(([key, value]) => `- **${key}:** ${formatMarkdownValue(value)}`)
     .join('\n');

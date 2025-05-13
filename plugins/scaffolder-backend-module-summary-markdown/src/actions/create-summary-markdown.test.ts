@@ -113,6 +113,38 @@ describe('createSummaryMarkdownAction', () => {
     expect(markdown).toContain('Deploy realizado com sucesso!');
   });
 
+  it('should render a heterogeneous array as a list, not a table', async () => {
+    const action = createSummaryMarkdownAction();
+    const mockContext = createMockActionContext({
+      input: {
+        sections: {
+          hetero: {
+            title: 'Heterogêneo',
+            data: [
+              { name: 'Alice', age: 30 },
+              'Bob',
+              42,
+              { name: 'Carol', age: 28 },
+            ],
+          },
+        },
+      },
+    });
+
+    const outputMock = jest.fn();
+    mockContext.output = outputMock;
+
+    await action.handler(mockContext);
+
+    const [[, markdown]] = outputMock.mock.calls;
+
+    expect(markdown).not.toContain('| name | age |');
+    expect(markdown).toContain('- {\n  "name": "Alice",\n  "age": 30\n}');
+    expect(markdown).toContain('- Bob');
+    expect(markdown).toContain('- 42');
+    expect(markdown).toContain('- {\n  "name": "Alice",\n  "age": 30\n}');
+  });
+
   it('should render URLs as markdown links in list', async () => {
     const action = createSummaryMarkdownAction();
     const mockContext = createMockActionContext({
