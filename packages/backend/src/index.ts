@@ -118,4 +118,5 @@ backend.add(
   ),
 );
 backend.add(import('@internal/backstage-plugin-simple-api-backend'));
+backend.add(import('@internal/backstage-plugin-scaffolder-backend-module-summary-markdown'));
 backend.start();

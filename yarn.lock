@@ -9090,6 +9090,17 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@internal/backstage-plugin-scaffolder-backend-module-summary-markdown@npm:^0.1.0, @internal/backstage-plugin-scaffolder-backend-module-summary-markdown@workspace:plugins/scaffolder-backend-module-summary-markdown":
+  version: 0.0.0-use.local
+  resolution: "@internal/backstage-plugin-scaffolder-backend-module-summary-markdown@workspace:plugins/scaffolder-backend-module-summary-markdown"
+  dependencies:
+    "@backstage/backend-plugin-api": "npm:^1.1.0"
+    "@backstage/cli": "npm:^0.29.4"
+    "@backstage/plugin-scaffolder-node": "npm:^0.6.2"
+    "@backstage/plugin-scaffolder-node-test-utils": "npm:^0.1.17"
+  languageName: unknown
+  linkType: soft
+
 "@internal/backstage-plugin-simple-api-backend@npm:^0.1.0, @internal/backstage-plugin-simple-api-backend@workspace:plugins/simple-api-backend":
   version: 0.0.0-use.local
   resolution: "@internal/backstage-plugin-simple-api-backend@workspace:plugins/simple-api-backend"
@@ -16795,6 +16806,7 @@ __metadata:
     "@backstage/plugin-search-backend-module-techdocs": "npm:^0.3.4"
     "@backstage/plugin-search-backend-node": "npm:^1.3.6"
     "@backstage/plugin-techdocs-backend": "npm:^1.11.4"
+    "@internal/backstage-plugin-scaffolder-backend-module-summary-markdown": "npm:^0.1.0"
     "@internal/backstage-plugin-simple-api-backend": "npm:^0.1.0"
     app: "link:../app"
     backstage-plugin-azure-dev-ops-backend: "npm:^0.1.0"

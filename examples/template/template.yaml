@@ -1,259 +1,57 @@
 apiVersion: scaffolder.backstage.io/v1beta3
-# https://backstage.io/docs/features/software-catalog/descriptor-format#kind-template
 kind: Template
 metadata:
-  name: example-nodejs-template
-  title: Example Node.js Template
-  description: An example template for the scaffolder that creates a simple Node.js service
+  name: teste-summary-markdown
+  title: Teste Completo da Action custom:summary-markdown
+  description: Exercita todos os modos de renderização da action customizada.
 spec:
-  owner: user:guest
+  owner: equipe-plataforma
   type: service
 
-  # These parameters are used to generate the input form in the frontend, and are
-  # used to gather input data for the execution of the template.
-  parameters:
-    - title: Fill in some steps
-      required:
-        - name
-      properties:
-        name:
-          title: Name
-          type: string
-          description: Unique name of the component
-          ui:autofocus: true
-          ui:options:
-            rows: 5
-    - title: Choose a location
-      required:
-        - repoUrl
-      properties:
-        repoUrl:
-          title: Repository Location
-          type: string
-          ui:field: RepoUrlPicker
-          ui:options:
-            allowedHosts:
-              - github.com
-
-  # These steps are executed in the scaffolder backend, using data that we gathered
-  # via the parameters above.
   steps:
-    # Each step executes an action, in this case one templates files into the working directory.
-    - id: fetch-base
-      name: Fetch Base
-      action: fetch:template
+    - id: resumo
+      name: Resumo Markdown
+      action: custom:summary-markdown
       input:
-        url: ./content
-        values:
-          name: ${{ parameters.name }}
+        sections:
+          Tabela:
+            title: Tabela de Builds
+            mode: table
+            data:
+              - name: Alice
+                age: 30
+                profile: https://github.com/alice
+              - name: Bob
+                age: 25
+                profile: https://github.com/bob
+          Lista:
+            title: Lista de Nomes
+            mode: list
+            data:
+              - Alice
+              - Bob
+              - Carol
+          Propriedades:
+            title: Configuração
+            mode: properties
+            data:
+              ambiente: production
+              url: https://meusistema.com
+              replicas: 3
+          Texto:
+            title: Mensagem Final
+            mode: text
+            data: 'Deploy realizado com sucesso! Veja em https://meusistema.com'
+          AutoDetectArray:
+            # Não define mode, será detectado automaticamente (deve virar lista)
+            data: [um, dois, tres]
+          AutoDetectObject:
+            # Não define mode, será detectado automaticamente (deve virar propriedades)
+            data:
+              chave: valor
+              link: https://backstage.io
 
-    # This step publishes the contents of the working directory to GitHub.
-    - id: publish
-      name: Publish
-      action: publish:github
-      input:
-        allowedHosts: ['github.com']
-        description: This is ${{ parameters.name }}
-        repoUrl: ${{ parameters.repoUrl }}
-
-    # The final step is to register our new component in the catalog.
-    - id: register
-      name: Register
-      action: catalog:register
-      input:
-        repoContentsUrl: ${{ steps['publish'].output.repoContentsUrl }}
-        catalogInfoPath: '/catalog-info.yaml'
-
-  # Outputs are displayed to the user after a successful execution of the template.
   output:
-    links:
-      - title: Repository
-        url: ${{ steps['publish'].output.remoteUrl }}
-      - title: Open in catalog
-        icon: catalog
-        entityRef: ${{ steps['register'].output.entityRef }}
----
-apiVersion: scaffolder.backstage.io/v1beta3
-kind: Template
-# some metadata about the template itself
-metadata:
-  name: v1beta3-demo
-  title: Test Action template
-  description: scaffolder v1beta3 template demo
-  tags:
-    - recommended
-spec:
-  owner: backstage/techdocs-core
-  type: service
-
-  # these are the steps which are rendered in the frontend with the form input
-  parameters:
-    - title: Fill in some steps
-      required:
-        - name
-      properties:
-        name:
-          title: Name
-          type: string
-          description: Unique name of the component
-          ui:autofocus: true
-          ui:options:
-            rows: 5
-    - title: Choose a location
-      required:
-        - repoUrl
-      properties:
-        repoUrl:
-          title: Repository Location
-          type: string
-          ui:field: RepoUrlPicker
-          ui:options:
-            allowedHosts:
-              - github.com
-
-  # here's the steps that are executed in series in the scaffolder backend
-  steps:
-    - id: fetch-base
-      name: Fetch Base
-      action: fetch:template
-      input:
-        url: ./template
-        values:
-          name: ${{ parameters.name }}
-
-    - id: fetch-docs
-      name: Fetch Docs
-      action: fetch:plain
-      input:
-        targetPath: ./community
-        url: https://github.com/backstage/community/tree/main/backstage-community-sessions
-
-    - id: publish
-      name: Publish
-      action: publish:github
-      input:
-        allowedHosts: ['github.com']
-        description: This is ${{ parameters.name }}
-        repoUrl: ${{ parameters.repoUrl }}
-
-    - id: log-repo-url
-      name: Log repo URL
-      action: debug:log
-      input:
-        message: 'Repo URL: ${{ parameters.repoUrl }}'
-
-    - id: register
-      name: Register
-      action: catalog:register
-      input:
-        repoContentsUrl: ${{ steps['publish'].output.repoContentsUrl }}
-        catalogInfoPath: '/catalog-info.yaml'
----
-apiVersion: scaffolder.backstage.io/v1beta3
-kind: Template
-metadata:
-  name: api-nest-template
-  title: API Nest Template
-  description: An example template for the scaffolder that creates a simple API with NestJS
-  tags:
-    - recommended
-spec:
-  owner: user:guest
-  type: service
-
-  parameters:
-    - title: Fill in some steps
-      type: object
-      required:
-        - projectName
-      properties:
-        projectName:
-          title: Project Name
-          type: string
-          description: Unique name of the component
-          ui:autofocus: true
-          ui:emptyValue: ''
-        owner:
-          title: Owner
-          type: string
-          description: Owner of the component
-          ui:field: OwnerPicker
-          ui:options:
-            catalogFilter:
-              kind: [Group, User]
-    - title: Choose a location
-      required:
-        - repoUrl
-      properties:
-        repoUrl:
-          title: Repository Location
-          type: string
-          ui:field: RepoUrlPicker
-          ui:options:
-            allowedHosts:
-              - github.com
-              - dev.azure.com
-  steps:
-    - id: fetch-base
-      name: Fetch Base
-      action: fetch:template
-      input:
-        url: ./content
-        values:
-          name: ${{ parameters.projectName }}
-
-    - id: fetch-docs
-      name: Fetch Docs
-      action: fetch:plain
-      input:
-        targetPath: ./community
-        url: https://github.com/backstage/community/tree/main/backstage-community-sessions
-
-    - id: log-repo-url
-      name: Log repo URL
-      action: debug:log
-      input:
-        message: 'Repo URL: ${{ parameters.repoUrl }}'
-
-    - id: publish-github
-      name: Publish to GitHub
-      if: ${{ 'github.com' in parameters.repoUrl }}
-      action: publish:github
-      input:
-        allowedHosts: ['github.com']
-        description: This is ${{ parameters.projectName }}
-        repoUrl: ${{ parameters.repoUrl }}
-        owner: ${{ parameters.owner }}
-
-    - id: publish-azure
-      name: Publish to Azure DevOps
-      if: ${{ 'dev.azure.com' in parameters.repoUrl }}
-      action: publish:azure
-      input:
-        allowedHosts: ['dev.azure.com']
-        description: This is ${{ parameters.projectName }}
-        repoUrl: ${{ parameters.repoUrl }}
-        project: ${{ parameters.project }}
-        organization: ${{ parameters.organization }}
-
-    - id: log-repo-url-output
-      name: Log repo URL output
-      action: debug:log
-      input:
-        message: "Repo URL: ${{ steps['publish-azure'].output.repoContentsUrl }}"
-
-    - id: register-github
-      name: Register in GitHub
-      if: ${{ 'github.com' in parameters.repoUrl }}
-      action: catalog:register
-      input:
-        repoContentsUrl: ${{ steps['publish-github'].output.repoContentsUrl }}
-        catalogInfoPath: '/catalog-info.yaml'
-
-    - id: register-azure
-      name: Register in Azure DevOps
-      if: ${{ 'dev.azure.com' in parameters.repoUrl }}
-      action: catalog:register
-      input:
-        repoContentsUrl: ${{ steps['publish-azure'].output.repoContentsUrl }}
-        catalogInfoPath: '/catalog-info.yaml'
+    text:
+      - title: Resultado Markdown
+        content: ${{ steps['resumo'].output.markdown }}
