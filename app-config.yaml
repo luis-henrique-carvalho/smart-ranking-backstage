@@ -153,30 +153,19 @@ plugins:
     pipelineUrl: ${AZURE_SERVICE_BUS_PIPELINE_URL}
     pipelineToken: ${AZURE_TOKEN}
 ai:
-  #(Optional) Supported sources to query information from using RAG. This can be used to omit unnecessary sources from being retrievable. Defaults to [catalog]
   supportedSources: ['catalog', 'techdocs', 'api']
   prompts:
-    # (Optional) Prefix prompt to add to the query. This prompt is always succeeded by a text blob of embeddings retrieved by the RAG engine.
-    prefix: 'you are an LLM designed to do this and that... based on... Use the following documents to...'
-
-    # Suffix prompt to add to the query. This prompt is always succeeded by text query user has input.
-    suffix: 'Begin! \n Question: \n'
+    prefix: 'You are an intelligent assistant specialized in helping developers navigate and understand their software catalog, technical documentation, and API resources in Backstage. You have access to comprehensive information about components, services, APIs, documentation, and organizational data. Your role is to provide accurate, helpful, and contextually relevant answers based on the available documentation and catalog information. Always prioritize accuracy and cite specific sources when possible. If you cannot find relevant information in the provided documents, clearly state this limitation.'
+    suffix: 'Based on the provided documentation and catalog information, please answer the following question:\n\nQuestion: '
   storage:
     pgvector:
-      # (Optional) The size of the chunk to flush when storing embeddings to the DB. Defaults to 500
       chunksize: 500
 
-  # Embeddings engine configuration options
   embeddings:
-    # Generic embeddings options
-    # (Optional) The chunk size of an embedding. Determines how big or small the individual pieces of context stored alongside the vectors and sent to the LLM are. Defaults to 1000
     chunkSize: 1000
-
-    # (Optional) The overlap between adjacent chunks of embeddings. The bigger the number, the more overlap. Defaults to 200
     chunkOverlap: 200
     concurrencyLimit: 10
     openai:
-      # baseURL: 'https://generativelanguage.googleapis.com/v1beta/'
       modelName: 'text-embedding-3-small'
       batchSize: 512
       embeddingsDimensions: 1536
