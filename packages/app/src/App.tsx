@@ -44,6 +44,7 @@ import { AzureProjectSelectorExtension } from './scaffolder/AzureProjectSelector
 import { AzureRepositorySelector } from './scaffolder/AzureRepositorySelector/AzureRepositorySelector';
 import { AzureRepositorySelectorExtension } from './scaffolder/AzureRepositorySelector';
 import { AzureServiceBusPage } from '@internal/backstage-plugin-azure-service-bus';
+import { RagModal } from '@roadiehq/rag-ai'
 
 const app = createApp({
   apis,
@@ -139,6 +140,7 @@ export default app.createRoot(
   <>
     <AlertDisplay />
     <OAuthRequestDialog />
+    <RagModal />
     <AppRouter>
       <Root>{routes}</Root>
     </AppRouter>

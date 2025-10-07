@@ -7,8 +7,13 @@
  */
 
 import { createBackend } from '@backstage/backend-defaults';
+import { ragai } from './plugins/rag-ai';
 
 const backend = createBackend();
+backend.add(ragai);
+
+// RAG AI backend plugin routes
+backend.add(import('@roadiehq/rag-ai-backend'));
 
 backend.add(import('@backstage/plugin-app-backend'));
 backend.add(import('@backstage/plugin-proxy-backend'));
@@ -118,5 +123,9 @@ backend.add(
   ),
 );
 backend.add(import('@internal/backstage-plugin-simple-api-backend'));
-backend.add(import('@internal/backstage-plugin-scaffolder-backend-module-summary-markdown'));
+backend.add(
+  import(
+    '@internal/backstage-plugin-scaffolder-backend-module-summary-markdown'
+  ),
+);
 backend.start();

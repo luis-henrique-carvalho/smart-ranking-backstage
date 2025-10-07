@@ -27,6 +27,7 @@ import MenuIcon from '@material-ui/icons/Menu';
 import SearchIcon from '@material-ui/icons/Search';
 import { MyGroupsSidebarItem } from '@backstage/plugin-org';
 import GroupIcon from '@material-ui/icons/People';
+import { SidebarRagModal } from '@roadiehq/rag-ai';
 
 const useSidebarLogoStyles = makeStyles({
   root: {
@@ -89,6 +90,8 @@ export const Root = ({ children }: PropsWithChildren<{}>) => (
         to="/settings"
       >
         <SidebarSettings />
+        <SidebarRagModal />
+
       </SidebarGroup>
     </Sidebar>
     {children}
