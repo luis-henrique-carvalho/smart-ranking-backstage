@@ -87,20 +87,44 @@ export const ragai = createBackendModule({
         });
         const baseUrl = await discovery.getBaseUrl('rag-ai');
         logger.info(`RAG AI base URL: ${baseUrl}`);
+
         scheduler.scheduleTask({
           id: 'create-catalog-embeddings',
+          // ATENÇÃO: 10 segundos é ótimo para teste, mas mude de volta
+          // para { days: 1 } em produção.
           frequency: { days: 1 },
           initialDelay: { seconds: 30 },
           timeout: { seconds: 180 },
           fn: async () => {
+            // 1. Gere um token de autenticação de serviço-para-serviço
+            const { token } = await auth.getPluginRequestToken({
+              onBehalfOf: await auth.getOwnServiceCredentials(),
+              targetPluginId: 'rag-ai',
+            });
+
             const url = `${baseUrl}/embeddings/catalog`;
             const options = {
               method: 'POST',
-              body: '{"entityFilter":{"kind":"component"}}',
+              body: '{"entityFilter":{}}',
+              // 2. Adicione o token no cabeçalho da requisição
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
             };
 
             try {
+              scheduleLogger.info('Triggering catalog embedding creation...');
               const response = await fetch(url, options);
+
+              // Adiciona uma verificação para a resposta da requisição
+              if (!response.ok) {
+                const errorText = await response.text();
+                scheduleLogger.error(
+                  `Failed to create embeddings. Status: ${response.status}. Body: ${errorText}`,
+                );
+                return;
+              }
+
               const data = await response.json();
               scheduleLogger.info(data);
             } catch (error) {
