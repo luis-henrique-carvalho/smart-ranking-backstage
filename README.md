@@ -2,7 +2,7 @@
 
 This is your newly scaffolded Backstage App, Good Luck!
 
-To start th
+To start 
 
 ```sh
 yarn install
